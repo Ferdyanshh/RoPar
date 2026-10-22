@@ -4,8 +4,7 @@
 
 | | |
 |---|---|
-| **Nama Kelompok** | _(isi)_ |
-| **Nama Team** | _(isi)_ |
+| **Nama Kelompok** | RoPar |
 | **Versi** | 1.0 |
 | **Tanggal** | 22 Oktober 2026 |
 | **Dokumen Terkait** | [BRD](BRD.md), [ERD](ERD.md) |
