@@ -1,0 +1,37 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+
+class ProfileController extends Controller
+{
+    public function show(Request $request): JsonResponse
+    {
+        return response()->json(['data' => $request->user()->load('profile')]);
+    }
+
+    public function update(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'name' => ['sometimes', 'required', 'string', 'max:100'],
+            'full_name' => ['sometimes', 'required', 'string', 'max:150'],
+            'phone' => ['sometimes', 'required', 'regex:/^\d{10,15}$/'],
+            'address' => ['sometimes', 'nullable', 'string'],
+            'birth_date' => ['sometimes', 'nullable', 'date', 'before:today'],
+        ]);
+
+        $user = $request->user();
+        DB::transaction(function () use ($user, $validated): void {
+            $user->update(collect($validated)->only(['name'])->all());
+            $user->profile()->updateOrCreate(
+                ['user_id' => $user->id],
+                collect($validated)->only(['full_name', 'phone', 'address', 'birth_date'])->all(),
+            );
+        });
+
+        return response()->json(['data' => $user->fresh()->load('profile')]);
+    }
+}
