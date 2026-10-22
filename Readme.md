@@ -15,7 +15,7 @@ Sistem Web Peminjaman Robot Pacar adalah platform terpusat untuk mengelola katal
 - **Anggota Team:**
   - Muhammad Ferdyansyah  - PM / 102022300141
   - Benedictus Chally Nugroho - Member / 102022300293
-  - Rayhan Aliffio Wibow - Member / 102022500103
+  - Rayhan Aliffio Wibowo - Member / 102022500103
 
 ---
 

@@ -13,7 +13,7 @@ use App\Http\Controllers\RobotCatalogController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return view('welcome');
+    return auth()->check() ? redirect()->route('dashboard') : redirect()->route('login');
 });
 
 Route::prefix('backend')->name('backend.')->group(function (): void {
@@ -61,5 +61,78 @@ Route::prefix('backend')->name('backend.')->group(function (): void {
             Route::post('/loans/{loan}/return', [AdminLoanController::class, 'processReturn'])->name('loans.return');
             Route::get('/reports/loans', [LoanReportController::class, 'index'])->name('reports.loans');
         });
+    });
+});
+
+/*
+|--------------------------------------------------------------------------
+| Frontend Routes (View Only)
+|--------------------------------------------------------------------------
+*/
+
+Route::middleware('guest')->group(function (): void {
+    Route::view('/login', 'auth.login')->name('login');
+    Route::view('/register', 'auth.register')->name('register');
+});
+
+Route::middleware('auth')->group(function (): void {
+    Route::view('/dashboard', 'dashboard')->name('dashboard');
+    Route::view('/profile', 'profile')->name('profile');
+    Route::view('/robots', 'robots.index')->name('robots.index');
+    Route::view('/robots/{id}', 'robots.show')->name('robots.show');
+
+    Route::middleware('role:anggota')->group(function (): void {
+        Route::view('/my-loans', 'loans.mine')->name('loans.mine');
+        Route::post('/my-loans/{loan}/return', function (\App\Models\Loan $loan, \App\Services\LoanService $loanService) {
+            abort_unless($loan->user_id === auth()->id(), 403, 'Bukan pinjaman Anda.');
+
+            $customReturnDate = request('return_date');
+            if ($customReturnDate) {
+                return \Illuminate\Support\Facades\DB::transaction(function () use ($loan, $customReturnDate) {
+                    $lockedLoan = \App\Models\Loan::query()->lockForUpdate()->findOrFail($loan->id);
+                    if ($lockedLoan->status !== \App\Enums\LoanStatus::Borrowed || $lockedLoan->return_date !== null) {
+                        return response()->json(['message' => 'Pinjaman ini sudah dikembalikan.'], 422);
+                    }
+                    $processedAt = \Carbon\CarbonImmutable::parse($customReturnDate)->startOfDay();
+                    $loanDate = \Carbon\CarbonImmutable::parse($lockedLoan->loan_date)->startOfDay();
+                    $dueDate = \Carbon\CarbonImmutable::parse($lockedLoan->due_date)->startOfDay();
+
+                    if ($processedAt->lt($loanDate)) {
+                        return response()->json(['message' => 'Tanggal pengembalian tidak boleh sebelum tanggal pinjam.'], 422);
+                    }
+
+                    $lateDays = $processedAt->gt($dueDate) ? (int) $dueDate->diffInDays($processedAt) : 0;
+                    $unit = \App\Models\RobotUnit::query()->lockForUpdate()->findOrFail($lockedLoan->robot_unit_id);
+
+                    $lockedLoan->update([
+                        'return_date' => $processedAt->toDateString(),
+                        'returned_by' => auth()->id(),
+                        'late_days' => $lateDays,
+                        'fine_amount' => $lateDays * 5000,
+                        'status' => \App\Enums\LoanStatus::Returned,
+                    ]);
+
+                    $unit->update(['status' => \App\Enums\RobotUnitStatus::Available]);
+
+                    return response()->json([
+                        'data' => $lockedLoan->fresh(['member.profile', 'unit.robot', 'returnProcessor']),
+                    ]);
+                });
+            }
+
+            return response()->json([
+                'data' => $loanService->processReturn($loan, auth()->user()),
+            ]);
+        })->name('loans.user-return');
+    });
+
+    Route::prefix('admin')->name('admin.')->middleware('role:admin')->group(function (): void {
+        Route::view('/categories', 'admin.categories')->name('categories');
+        Route::view('/robots', 'admin.robots')->name('robots');
+        Route::view('/units', 'admin.units')->name('units');
+        Route::view('/members', 'admin.members')->name('members');
+        Route::view('/loans/active', 'admin.loans-active')->name('loans.active');
+        Route::view('/loans/history', 'admin.loans-history')->name('loans.history');
+        Route::view('/loans/history/print', 'admin.loans-print')->name('loans.print');
     });
 });
