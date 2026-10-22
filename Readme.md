@@ -93,7 +93,7 @@ erDiagram
     CATEGORIES ||--o{ CATEGORY_ROBOT : "memiliki"
     ROBOT_UNITS ||--o{ LOANS : "dipinjam dalam"
 ```
-> *Untuk skema dan kamus data rinci, silakan cek [ERD.md](ERD.md).*
+> *Untuk skema dan kamus data rinci, silakan cek [ERD.md](/Documentations/ERD.md).*
 
 ---
 
@@ -177,4 +177,4 @@ Pengujian dilakukan untuk memastikan seluruh aturan bisnis berjalan presisi:
 
 ## 📄 Lisensi
 
-Proyek ini dikembangkan di bawah lisensi [MIT License](LICENSE).
+Proyek ini dikembangkan di bawah lisensi [MIT License](https://opensource.org/license/mit).
