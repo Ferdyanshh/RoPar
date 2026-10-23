@@ -13,7 +13,7 @@
 
 ## 1. Latar Belakang
 
-Layanan penyewaan Robot Pacar membutuhkan sistem terpusat untuk mengelola katalog robot, keanggotaan, peminjaman, pengembalian, dan denda keterlambatan. Tanpa sistem, pencatatan manual rawan salah: stok tidak sinkron, batas pinjaman sulit dikontrol, dan denda dihitung tidak konsisten.
+RoPar (Robot Pacar) adalah aplikasi web untuk mengelola layanan peminjaman robot secara terpusat. Anggota dapat mendaftar, mencari robot dan unit yang tersedia, melakukan peminjaman, serta melihat status dan riwayat pinjaman. Admin mengelola data robot, kategori, unit, dan anggota, memproses pengembalian, menghitung denda keterlambatan, serta mencetak laporan. Sistem membantu menjaga data ketersediaan unit dan transaksi peminjaman tetap tercatat dengan konsisten.
 
 ## 2. Tujuan Bisnis
 
