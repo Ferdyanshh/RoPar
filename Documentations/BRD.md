@@ -47,8 +47,6 @@ Layanan penyewaan Robot Pacar membutuhkan sistem terpusat untuk mengelola katalo
 |---|---|---|
 | Admin | Pengelola layanan | Mengelola data, memproses pengembalian, melihat laporan |
 | Anggota | Peminjam | Mencari dan meminjam robot, melihat pinjaman sendiri |
-| Dosen / Penguji | Evaluator | Menilai kesesuaian dengan requirement tugas |
-| Tim Pengembang | Pelaksana | Merancang, membangun, dan mendokumentasikan sistem |
 
 ## 5. Aktor / Jenis Pengguna
 
