@@ -67,14 +67,15 @@
                         </div>
                         <div>
                             <label for="phone" class="block text-sm font-medium text-surface-700 mb-1.5">No. Telepon <span class="text-danger-500">*</span></label>
-                            <input type="text" id="phone" x-model="form.phone" required pattern="\d{10,15}" inputmode="numeric" placeholder="08xxxxxxxxxx" maxlength="15"
+                            <input type="tel" id="phone" x-model="form.phone" required pattern="(?:[0-9]{8,15}|\+[0-9]{7,14})" inputmode="tel" placeholder="08xxxxxxxxxx" maxlength="15"
                                    class="w-full px-3.5 py-2.5 bg-white border border-surface-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/40 focus:border-primary-500 transition-colors">
                             <template x-if="errors?.phone"><template x-for="msg in errors.phone" :key="msg"><p class="text-xs text-danger-600 mt-1" x-text="msg"></p></template></template>
                         </div>
                         <div>
-                            <label for="address" class="block text-sm font-medium text-surface-700 mb-1.5">Alamat</label>
-                            <textarea id="address" x-model="form.address" rows="2" placeholder="Alamat lengkap (opsional)"
+                            <label for="address" class="block text-sm font-medium text-surface-700 mb-1.5">Alamat <span class="text-danger-500">*</span></label>
+                            <textarea id="address" x-model="form.address" rows="2" required placeholder="Alamat lengkap"
                                       class="w-full px-3.5 py-2.5 bg-white border border-surface-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/40 focus:border-primary-500 transition-colors resize-y"></textarea>
+                            <template x-if="errors?.address"><template x-for="msg in errors.address" :key="msg"><p class="text-xs text-danger-600 mt-1" x-text="msg"></p></template></template>
                         </div>
                         <div>
                             <label for="birth_date" class="block text-sm font-medium text-surface-700 mb-1.5">Tanggal Lahir</label>
@@ -125,7 +126,8 @@
                     if (!this.form.full_name) this.errors.full_name = ['Nama lengkap wajib diisi.'];
                     else if (this.form.full_name.length > 150) this.errors.full_name = ['Nama lengkap maksimal 150 karakter.'];
                     if (!this.form.phone) this.errors.phone = ['No. telepon wajib diisi.'];
-                    else if (!/^\d{10,15}$/.test(this.form.phone)) this.errors.phone = ['No. telepon harus 10–15 digit angka.'];
+                    else if (!/^(?:[0-9]{8,15}|\+[0-9]{7,14})$/.test(this.form.phone)) this.errors.phone = ['No. telepon harus 8–15 karakter angka dan boleh diawali tanda +.'];
+                    if (!this.form.address.trim()) this.errors.address = ['Alamat wajib diisi.'];
                     if (this.form.birth_date && this.form.birth_date >= new Date().toISOString().substring(0, 10)) {
                         this.errors.birth_date = ['Tanggal lahir harus sebelum hari ini.'];
                     }

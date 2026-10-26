@@ -168,14 +168,14 @@
                         </div>
                         <div>
                             <div class="flex items-center gap-2">
-                                <h4 class="font-bold text-base text-danger-900">Total Denda Keterlambatan: <span class="text-danger-700" x-text="formatRupiah(totalFine)"></span></h4>
-                                <span class="px-2.5 py-0.5 text-[10px] font-extrabold uppercase rounded-full bg-danger-200 text-danger-900 tracking-wider">Perlu Diselesaikan</span>
+                                <h4 class="font-bold text-base text-danger-900">Total Denda Belum Lunas: <span class="text-danger-700" x-text="formatRupiah(totalFine)"></span></h4>
+                                <span class="px-2.5 py-0.5 text-[10px] font-extrabold uppercase rounded-full bg-danger-200 text-danger-900 tracking-wider">Perlu Dibayar</span>
                             </div>
-                            <p class="text-xs text-danger-700 mt-0.5" x-text="fineSubtitle + '. Denda dihitung Rp5.000 / hari keterlambatan.'"></p>
+                            <p class="text-xs text-danger-700 mt-0.5" x-text="fineSubtitle + '. Pembayaran menunggu persetujuan admin setelah bukti dikirim.'"></p>
                         </div>
                     </div>
                     <a href="/my-loans" class="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-danger-600 hover:bg-danger-700 text-white text-xs font-bold rounded-xl transition shadow flex-shrink-0">
-                        <span>Lihat Rincian di Pinjaman Saya</span>
+                        <span>Lihat Riwayat di Pinjaman Saya</span>
                         <span>→</span>
                     </a>
                 </div>
@@ -254,7 +254,10 @@
                                         </p>
 
                                         <div class="mt-3 pt-3 border-t border-surface-200/60 flex items-center justify-between">
-                                            <template x-if="calculateLateDays(loan.due_date) > 0">
+                                            <template x-if="isScheduled(loan)">
+                                                <span class="rounded-lg bg-info-50 px-2.5 py-1 text-xs font-semibold text-info-700">Mulai pinjam <span x-text="formatDate(loan.loan_date)"></span></span>
+                                            </template>
+                                            <template x-if="!isScheduled(loan) && calculateLateDays(loan.due_date) > 0">
                                                 <div>
                                                     <span class="inline-block px-2 py-0.5 rounded text-xs font-bold bg-danger-100 text-danger-700">
                                                         Terlambat <span x-text="calculateLateDays(loan.due_date)"></span> hari
@@ -262,15 +265,21 @@
                                                     <p class="text-xs text-danger-600 font-bold mt-0.5" x-text="'Denda: ' + formatRupiah(calculateFine(loan.due_date))"></p>
                                                 </div>
                                             </template>
-                                            <template x-if="calculateLateDays(loan.due_date) === 0">
+                                            <template x-if="!isScheduled(loan) && calculateLateDays(loan.due_date) === 0">
                                                 <span class="text-xs font-semibold text-success-600 bg-success-50 px-2.5 py-1 rounded-lg">
                                                     Sisa <span x-text="calculateRemainingDays(loan.due_date)"></span> hari lagi
                                                 </span>
                                             </template>
-                                            <a href="/my-loans" class="text-xs font-bold text-primary-600 hover:text-primary-700 inline-flex items-center gap-1">
-                                                <span>Kembalikan Unit</span>
-                                                <span>→</span>
-                                            </a>
+                                            <button type="button" x-show="!isScheduled(loan)"
+                                                    @click="returnLoan(loan.id)"
+                                                    :disabled="returningLoanId === loan.id"
+                                                    class="text-xs font-bold text-primary-600 transition hover:text-primary-700 disabled:cursor-wait disabled:opacity-60"
+                                                    x-text="returningLoanId === loan.id ? 'Memproses...' : 'Kembalikan Unit →'"></button>
+                                            <button type="button" x-show="isScheduled(loan)"
+                                                    @click="cancelReservation(loan.id)"
+                                                    :disabled="returningLoanId === loan.id"
+                                                    class="text-xs font-bold text-danger-600 transition hover:text-danger-700 disabled:cursor-wait disabled:opacity-60"
+                                                    x-text="returningLoanId === loan.id ? 'Memproses...' : 'Batalkan Reservasi'"></button>
                                         </div>
                                     </div>
                                 </div>
@@ -288,7 +297,7 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4" x-show="historyLoans.length > 0">
                         <template x-for="loan in historyLoans" :key="loan.id">
                             <div class="border rounded-2xl p-5 hover:border-surface-300 transition relative"
-                                 :class="loan.fine_amount > 0 ? 'border-danger-200 bg-danger-50/20' : 'border-surface-200 bg-white'">
+                                 :class="loan.fine_amount > 0 && latestFinePaymentStatus(loan) !== 'lunas' ? 'border-danger-200 bg-danger-50/20' : 'border-surface-200 bg-white'">
                                 <div class="flex items-start gap-4">
                                     <div class="w-16 h-16 rounded-xl bg-surface-100 border border-surface-200 flex-shrink-0 overflow-hidden flex items-center justify-center">
                                         <template x-if="loan.unit?.robot?.photo">
@@ -314,7 +323,7 @@
 
                                         <div class="mt-3 pt-3 border-t border-surface-200/60 flex items-center justify-between">
                                             <div>
-                                                <template x-if="loan.fine_amount > 0">
+                                                <template x-if="loan.fine_amount > 0 && latestFinePaymentStatus(loan) !== 'lunas'">
                                                     <div>
                                                         <span class="inline-block px-2 py-0.5 rounded text-xs font-bold bg-danger-100 text-danger-700">
                                                             Terlambat <span x-text="loan.late_days || 0"></span> hari
@@ -328,6 +337,15 @@
                                                     </span>
                                                 </template>
                                             </div>
+                                            <template x-if="loan.fine_amount > 0 && latestFinePaymentStatus(loan) === 'lunas'">
+                                                <span class="rounded-lg border border-success-200 bg-success-50 px-2.5 py-1 text-xs font-bold text-success-700">Denda sudah dibayar</span>
+                                            </template>
+                                            <template x-if="loan.fine_amount > 0 && latestFinePaymentStatus(loan) === 'menunggu'">
+                                                <span class="rounded-lg border border-warning-200 bg-warning-50 px-2.5 py-1 text-xs font-bold text-warning-700">Menunggu verifikasi</span>
+                                            </template>
+                                            <template x-if="loan.fine_amount > 0 && latestFinePaymentStatus(loan) === 'ditolak'">
+                                                <span class="max-w-44 text-right text-xs font-semibold text-danger-600" x-text="'Ditolak: ' + loan.fine_payments[0].rejection_reason"></span>
+                                            </template>
                                             <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-success-50 text-success-700 border border-success-200">
                                                 <svg class="w-3.5 h-3.5 text-success-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
                                                 <span>Dikembalikan</span>
@@ -354,6 +372,7 @@
                     activeFine: 0,
                     historyFine: 0,
                     finedHistoryCount: 0,
+                    returningLoanId: null,
                     fineSubtitle: 'Rp5.000 / hari keterlambatan',
                     loading: true,
 
@@ -396,8 +415,10 @@
 
                             this.historyLoans.forEach(loan => {
                                 const hFine = Number(loan.fine_amount || 0);
-                                sumHistoryFine += hFine;
-                                if (hFine > 0) finedCount++;
+                                if (hFine > 0 && this.latestFinePaymentStatus(loan) !== 'lunas') {
+                                    sumHistoryFine += hFine;
+                                    finedCount++;
+                                }
                             });
 
                             this.activeFine = sumActiveFine;
@@ -427,6 +448,45 @@
                         } finally {
                             this.loading = false;
                         }
+                    },
+
+                    async returnLoan(loanId) {
+                        if (!window.confirm('Kembalikan robot ini sekarang? Tanggal pengembalian dan denda dihitung otomatis oleh sistem.')) {
+                            return;
+                        }
+
+                        this.returningLoanId = loanId;
+
+                        try {
+                            await api.post('/backend/loans/' + loanId + '/return', {});
+                            window.location.reload();
+                        } catch (error) {
+                            window.alert(error.message || 'Pengembalian robot gagal diproses. Silakan coba lagi.');
+                            this.returningLoanId = null;
+                        }
+                    },
+
+                    async cancelReservation(loanId) {
+                        if (!window.confirm('Batalkan reservasi unit ini? Unit akan kembali tersedia untuk anggota lain.')) {
+                            return;
+                        }
+
+                        this.returningLoanId = loanId;
+                        try {
+                            await api.post('/backend/loans/' + loanId + '/cancel', {});
+                            window.location.reload();
+                        } catch (error) {
+                            window.alert(error.message || 'Reservasi gagal dibatalkan.');
+                            this.returningLoanId = null;
+                        }
+                    },
+
+                    latestFinePaymentStatus(loan) {
+                        return loan.fine_payments?.[0]?.status || null;
+                    },
+
+                    isScheduled(loan) {
+                        return loan.status === 'dipinjam' && toLocalDateString(loan.loan_date) > todayDate();
                     }
                 }
             }

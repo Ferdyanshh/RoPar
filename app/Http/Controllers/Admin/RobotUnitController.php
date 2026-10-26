@@ -12,16 +12,18 @@ use Illuminate\Validation\ValidationException;
 
 class RobotUnitController extends Controller
 {
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        return response()->json(RobotUnit::query()->with('robot:id,name')->orderBy('unit_code')->paginate(25));
+        $filters = $request->validate(['per_page' => ['sometimes', 'integer', 'min:1', 'max:100']]);
+
+        return response()->json(RobotUnit::query()->with('robot:id,name')->orderBy('unit_code')->paginate($filters['per_page'] ?? 15));
     }
 
     public function store(Request $request): JsonResponse
     {
         $unit = RobotUnit::query()->create($request->validate([
             'robot_id' => ['required', 'integer', 'exists:robots,id'],
-            'unit_code' => ['required', 'string', 'max:30', 'regex:/^RBT-\d{3,}$/', 'unique:robot_units,unit_code'],
+            'unit_code' => ['required', 'string', 'max:50', 'unique:robot_units,unit_code'],
             'condition_note' => ['nullable', 'string'],
         ]));
 
@@ -44,11 +46,10 @@ class RobotUnitController extends Controller
 
         $robotUnit->update($request->validate([
             'robot_id' => ['sometimes', 'required', 'integer', 'exists:robots,id'],
-            'unit_code' => ['sometimes', 'required', 'string', 'max:30', 'regex:/^RBT-\d{3,}$/', Rule::unique('robot_units', 'unit_code')->ignore($robotUnit)],
+            'unit_code' => ['sometimes', 'required', 'string', 'max:50', Rule::unique('robot_units', 'unit_code')->ignore($robotUnit)],
             'status' => ['sometimes', 'required', Rule::in([
                 RobotUnitStatus::Available->value,
-                RobotUnitStatus::Maintenance->value,
-                RobotUnitStatus::Lost->value,
+                RobotUnitStatus::Damaged->value,
             ])],
             'condition_note' => ['sometimes', 'nullable', 'string'],
         ]));

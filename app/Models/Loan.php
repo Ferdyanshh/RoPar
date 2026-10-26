@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable(['user_id', 'robot_unit_id', 'loan_date', 'due_date', 'return_date', 'returned_by', 'late_days', 'fine_amount', 'status'])]
 class Loan extends Model
@@ -38,5 +39,10 @@ class Loan extends Model
     public function returnProcessor(): BelongsTo
     {
         return $this->belongsTo(User::class, 'returned_by');
+    }
+
+    public function finePayments(): HasMany
+    {
+        return $this->hasMany(FinePayment::class)->latest()->orderByDesc('id');
     }
 }

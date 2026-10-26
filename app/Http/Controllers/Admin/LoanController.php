@@ -11,13 +11,15 @@ use Illuminate\Http\Request;
 
 class LoanController extends Controller
 {
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
+        $filters = $request->validate(['per_page' => ['sometimes', 'integer', 'min:1', 'max:100']]);
+
         $loans = Loan::query()
             ->where('status', LoanStatus::Borrowed->value)
             ->with(['member.profile', 'unit.robot'])
             ->orderBy('due_date')
-            ->paginate(25);
+            ->paginate($filters['per_page'] ?? 15);
 
         return response()->json($loans);
     }

@@ -21,8 +21,7 @@
                         <option value="">Semua Status Unit</option>
                         <option value="tersedia">Tersedia</option>
                         <option value="dipinjam">Dipinjam</option>
-                        <option value="perawatan">Perawatan</option>
-                        <option value="hilang">Hilang</option>
+                        <option value="rusak">Rusak</option>
                     </select>
                 </div>
                 <div class="w-full sm:w-60">
@@ -74,8 +73,7 @@
                                           :class="{
                                               'bg-success-50 text-success-700 ring-1 ring-success-500/20': unit.status === 'tersedia',
                                               'bg-warning-50 text-warning-600 ring-1 ring-warning-500/20': unit.status === 'dipinjam',
-                                              'bg-info-50 text-info-600 ring-1 ring-info-500/20': unit.status === 'perawatan',
-                                              'bg-danger-50 text-danger-600 ring-1 ring-danger-500/20': unit.status === 'hilang'
+                                              'bg-danger-50 text-danger-600 ring-1 ring-danger-500/20': unit.status === 'rusak'
                                           }"
                                           x-text="unit.status"></span>
                                 </td>
@@ -133,7 +131,7 @@
                             Kode Unit <span class="text-danger-500">* (Pola: RBT- + min 3 digit, misal: RBT-001)</span>
                         </label>
                         <input type="text" x-model="form.unit_code" @input="form.unit_code = form.unit_code.toUpperCase()"
-                               required pattern="RBT-\d{3,}" placeholder="RBT-001" maxlength="30"
+                               required placeholder="Contoh: RBT-001 atau AYA-001" maxlength="50"
                                class="w-full px-3.5 py-2.5 bg-white border border-surface-300 rounded-xl font-mono text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/40 focus:border-primary-500 transition-colors uppercase">
                         <template x-if="errors?.unit_code"><template x-for="msg in errors.unit_code" :key="msg"><p class="text-xs text-danger-600 mt-1" x-text="msg"></p></template></template>
                     </div>
@@ -147,8 +145,7 @@
                             <select x-model="form.status" required
                                     class="w-full px-3.5 py-2.5 bg-white border border-surface-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/40 focus:border-primary-500 transition-colors">
                                 <option value="tersedia">Tersedia</option>
-                                <option value="perawatan">Perawatan</option>
-                                <option value="hilang">Hilang</option>
+                                <option value="rusak">Rusak</option>
                             </select>
                         </div>
                     </template>
@@ -294,9 +291,7 @@
                     this.errors = {};
                     if (!this.form.robot_id) this.errors.robot_id = ['Robot wajib dipilih.'];
                     if (!this.form.unit_code) this.errors.unit_code = ['Kode unit wajib diisi.'];
-                    else if (!/^RBT-\d{3,}$/.test(this.form.unit_code)) {
-                        this.errors.unit_code = ['Kode unit harus berformat RBT- diikuti minimal 3 digit (contoh: RBT-001).'];
-                    }
+                    else if (this.form.unit_code.length > 50) this.errors.unit_code = ['Kode unit maksimal 50 karakter.'];
 
                     if (Object.keys(this.errors).length > 0) return;
                     this.saving = true;

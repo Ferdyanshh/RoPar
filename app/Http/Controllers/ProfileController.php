@@ -18,8 +18,8 @@ class ProfileController extends Controller
         $validated = $request->validate([
             'name' => ['sometimes', 'required', 'string', 'max:100'],
             'full_name' => ['sometimes', 'required', 'string', 'max:150'],
-            'phone' => ['sometimes', 'required', 'regex:/^\d{10,15}$/'],
-            'address' => ['sometimes', 'nullable', 'string'],
+            'phone' => ['sometimes', 'required', 'regex:/^(?:[0-9]{8,15}|\+[0-9]{7,14})$/'],
+            'address' => ['sometimes', 'required', 'string'],
             'birth_date' => ['sometimes', 'nullable', 'date', 'before:today'],
         ]);
 

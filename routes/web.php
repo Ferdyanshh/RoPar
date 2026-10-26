@@ -1,12 +1,14 @@
 <?php
 
 use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
+use App\Http\Controllers\Admin\FinePaymentController as AdminFinePaymentController;
 use App\Http\Controllers\Admin\LoanController as AdminLoanController;
 use App\Http\Controllers\Admin\LoanReportController;
 use App\Http\Controllers\Admin\MemberController;
 use App\Http\Controllers\Admin\RobotController as AdminRobotController;
 use App\Http\Controllers\Admin\RobotUnitController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\FinePaymentController;
 use App\Http\Controllers\LoanController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RobotCatalogController;
@@ -31,6 +33,9 @@ Route::prefix('backend')->name('backend.')->group(function (): void {
         Route::middleware('role:anggota')->group(function (): void {
             Route::get('/loans', [LoanController::class, 'index'])->name('loans.index');
             Route::post('/loans', [LoanController::class, 'store'])->name('loans.store');
+            Route::post('/loans/{loan}/return', [LoanController::class, 'processReturn'])->name('loans.return');
+            Route::post('/loans/{loan}/cancel', [LoanController::class, 'cancelReservation'])->name('loans.cancel');
+            Route::post('/loans/{loan}/fine-payment', [FinePaymentController::class, 'store'])->name('loans.fine-payment.store');
         });
 
         Route::prefix('admin')->name('admin.')->middleware('role:admin')->group(function (): void {
@@ -60,6 +65,11 @@ Route::prefix('backend')->name('backend.')->group(function (): void {
             Route::get('/loans', [AdminLoanController::class, 'index'])->name('loans.index');
             Route::post('/loans/{loan}/return', [AdminLoanController::class, 'processReturn'])->name('loans.return');
             Route::get('/reports/loans', [LoanReportController::class, 'index'])->name('reports.loans');
+            Route::get('/fine-payments', [AdminFinePaymentController::class, 'index'])->name('fine-payments.index');
+            Route::get('/fine-payments/pending-count', [AdminFinePaymentController::class, 'pendingCount'])->name('fine-payments.pending-count');
+            Route::get('/fine-payments/{finePayment}/proof', [AdminFinePaymentController::class, 'proof'])->name('fine-payments.proof');
+            Route::patch('/fine-payments/{finePayment}/approve', [AdminFinePaymentController::class, 'approve'])->name('fine-payments.approve');
+            Route::patch('/fine-payments/{finePayment}/reject', [AdminFinePaymentController::class, 'reject'])->name('fine-payments.reject');
         });
     });
 });
@@ -83,47 +93,6 @@ Route::middleware('auth')->group(function (): void {
 
     Route::middleware('role:anggota')->group(function (): void {
         Route::view('/my-loans', 'loans.mine')->name('loans.mine');
-        Route::post('/my-loans/{loan}/return', function (\App\Models\Loan $loan, \App\Services\LoanService $loanService) {
-            abort_unless($loan->user_id === auth()->id(), 403, 'Bukan pinjaman Anda.');
-
-            $customReturnDate = request('return_date');
-            if ($customReturnDate) {
-                return \Illuminate\Support\Facades\DB::transaction(function () use ($loan, $customReturnDate) {
-                    $lockedLoan = \App\Models\Loan::query()->lockForUpdate()->findOrFail($loan->id);
-                    if ($lockedLoan->status !== \App\Enums\LoanStatus::Borrowed || $lockedLoan->return_date !== null) {
-                        return response()->json(['message' => 'Pinjaman ini sudah dikembalikan.'], 422);
-                    }
-                    $processedAt = \Carbon\CarbonImmutable::parse($customReturnDate)->startOfDay();
-                    $loanDate = \Carbon\CarbonImmutable::parse($lockedLoan->loan_date)->startOfDay();
-                    $dueDate = \Carbon\CarbonImmutable::parse($lockedLoan->due_date)->startOfDay();
-
-                    if ($processedAt->lt($loanDate)) {
-                        return response()->json(['message' => 'Tanggal pengembalian tidak boleh sebelum tanggal pinjam.'], 422);
-                    }
-
-                    $lateDays = $processedAt->gt($dueDate) ? (int) $dueDate->diffInDays($processedAt) : 0;
-                    $unit = \App\Models\RobotUnit::query()->lockForUpdate()->findOrFail($lockedLoan->robot_unit_id);
-
-                    $lockedLoan->update([
-                        'return_date' => $processedAt->toDateString(),
-                        'returned_by' => auth()->id(),
-                        'late_days' => $lateDays,
-                        'fine_amount' => $lateDays * 5000,
-                        'status' => \App\Enums\LoanStatus::Returned,
-                    ]);
-
-                    $unit->update(['status' => \App\Enums\RobotUnitStatus::Available]);
-
-                    return response()->json([
-                        'data' => $lockedLoan->fresh(['member.profile', 'unit.robot', 'returnProcessor']),
-                    ]);
-                });
-            }
-
-            return response()->json([
-                'data' => $loanService->processReturn($loan, auth()->user()),
-            ]);
-        })->name('loans.user-return');
     });
 
     Route::prefix('admin')->name('admin.')->middleware('role:admin')->group(function (): void {
@@ -134,5 +103,6 @@ Route::middleware('auth')->group(function (): void {
         Route::view('/loans/active', 'admin.loans-active')->name('loans.active');
         Route::view('/loans/history', 'admin.loans-history')->name('loans.history');
         Route::view('/loans/history/print', 'admin.loans-print')->name('loans.print');
+        Route::view('/fine-payments', 'admin.fine-payments')->name('fine-payments');
     });
 });

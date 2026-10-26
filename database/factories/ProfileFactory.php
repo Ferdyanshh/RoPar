@@ -22,7 +22,7 @@ class ProfileFactory extends Factory
             'user_id' => User::factory(),
             'full_name' => fake()->name(),
             'phone' => fake()->numerify('08#############'),
-            'address' => fake()->optional()->address(),
+            'address' => fake()->address(),
             'birth_date' => fake()->optional()->dateTimeBetween('-60 years', '-18 years')?->format('Y-m-d'),
         ];
     }

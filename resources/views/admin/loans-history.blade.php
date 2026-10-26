@@ -15,15 +15,20 @@
             </div>
 
             {{-- Filter Grid --}}
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 pt-3 border-t border-surface-100">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3 pt-3 border-t border-surface-100">
+                <div>
+                    <label class="block text-[11px] font-semibold text-surface-500 mb-1">Bulan Pinjam</label>
+                    <input type="month" x-model="filter.month" @change="filter.from = ''; filter.to = ''; loadData(1)"
+                           class="w-full px-3 py-1.5 bg-surface-50 border border-surface-200 rounded-xl text-xs focus:ring-2 focus:ring-primary-500/40">
+                </div>
                 <div>
                     <label class="block text-[11px] font-semibold text-surface-500 mb-1">Dari Tanggal Pinjam</label>
-                    <input type="date" x-model="filter.from" @change="validateDates() && loadData(1)"
+                    <input type="date" x-model="filter.from" @change="filter.month = ''; validateDates() && loadData(1)"
                            class="w-full px-3 py-1.5 bg-surface-50 border border-surface-200 rounded-xl text-xs focus:ring-2 focus:ring-primary-500/40">
                 </div>
                 <div>
                     <label class="block text-[11px] font-semibold text-surface-500 mb-1">Sampai Tanggal Pinjam</label>
-                    <input type="date" x-model="filter.to" @change="validateDates() && loadData(1)"
+                    <input type="date" x-model="filter.to" @change="filter.month = ''; validateDates() && loadData(1)"
                            class="w-full px-3 py-1.5 bg-surface-50 border border-surface-200 rounded-xl text-xs focus:ring-2 focus:ring-primary-500/40">
                 </div>
                 <div>
@@ -33,6 +38,7 @@
                         <option value="">Semua Status</option>
                         <option value="dipinjam">Dipinjam (Aktif)</option>
                         <option value="dikembalikan">Dikembalikan</option>
+                        <option value="dibatalkan">Reservasi Dibatalkan</option>
                     </select>
                 </div>
                 <div>
@@ -131,6 +137,7 @@
                 loans: [],
                 allMembers: [],
                 filter: {
+                    month: '',
                     from: '',
                     to: '',
                     status: '',
@@ -172,8 +179,9 @@
 
                     const params = {
                         page: this.currentPage,
-                        per_page: 25
+                        per_page: 15
                     };
+                    if (this.filter.month) params.month = this.filter.month;
                     if (this.filter.from) params.from = this.filter.from;
                     if (this.filter.to) params.to = this.filter.to;
                     if (this.filter.status) params.status = this.filter.status;
@@ -194,6 +202,7 @@
 
                 printReport() {
                     const params = new URLSearchParams();
+                    if (this.filter.month) params.append('month', this.filter.month);
                     if (this.filter.from) params.append('from', this.filter.from);
                     if (this.filter.to) params.append('to', this.filter.to);
                     if (this.filter.status) params.append('status', this.filter.status);

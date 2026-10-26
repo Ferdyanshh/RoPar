@@ -49,17 +49,18 @@
                             <label class="block text-sm font-medium text-surface-700 mb-1.5">
                                 Nomor Telepon / HP <span class="text-danger-500">*</span>
                             </label>
-                            <input type="text" x-model="form.phone" required pattern="\d{10,15}" inputmode="numeric" maxlength="15"
+                            <input type="tel" x-model="form.phone" required pattern="(?:[0-9]{8,15}|\+[0-9]{7,14})" inputmode="tel" maxlength="15"
                                    class="w-full px-3.5 py-2.5 bg-white border border-surface-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/40 focus:border-primary-500 transition-colors">
                             <template x-if="errors?.phone"><template x-for="msg in errors.phone" :key="msg"><p class="text-xs text-danger-600 mt-1" x-text="msg"></p></template></template>
                         </div>
 
                         <div>
                             <label class="block text-sm font-medium text-surface-700 mb-1.5">
-                                Alamat Domisili
+                                Alamat Domisili <span class="text-danger-500">*</span>
                             </label>
-                            <textarea x-model="form.address" rows="2"
+                            <textarea x-model="form.address" rows="2" required
                                       class="w-full px-3.5 py-2.5 bg-white border border-surface-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/40 focus:border-primary-500 transition-colors resize-y"></textarea>
+                            <template x-if="errors?.address"><template x-for="msg in errors.address" :key="msg"><p class="text-xs text-danger-600 mt-1" x-text="msg"></p></template></template>
                         </div>
 
                         <div>
@@ -128,7 +129,8 @@
                     if (!this.form.name) this.errors.name = ['Username wajib diisi.'];
                     if (!this.form.full_name) this.errors.full_name = ['Nama lengkap wajib diisi.'];
                     if (!this.form.phone) this.errors.phone = ['No. telepon wajib diisi.'];
-                    else if (!/^\d{10,15}$/.test(this.form.phone)) this.errors.phone = ['Nomor telepon harus 10–15 digit angka.'];
+                    else if (!/^(?:[0-9]{8,15}|\+[0-9]{7,14})$/.test(this.form.phone)) this.errors.phone = ['Nomor telepon harus 8–15 karakter angka dan boleh diawali tanda +.'];
+                    if (!this.form.address.trim()) this.errors.address = ['Alamat wajib diisi.'];
                     if (this.form.birth_date && this.form.birth_date >= new Date().toISOString().substring(0, 10)) {
                         this.errors.birth_date = ['Tanggal lahir harus sebelum hari ini.'];
                     }

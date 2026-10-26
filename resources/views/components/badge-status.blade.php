@@ -5,8 +5,7 @@ $styles = [
     // Unit statuses
     'tersedia' => 'bg-success-50 text-success-700 ring-1 ring-success-500/20',
     'dipinjam' => 'bg-warning-50 text-warning-600 ring-1 ring-warning-500/20',
-    'perawatan' => 'bg-info-50 text-info-600 ring-1 ring-info-500/20',
-    'hilang' => 'bg-danger-50 text-danger-600 ring-1 ring-danger-500/20',
+    'rusak' => 'bg-danger-50 text-danger-600 ring-1 ring-danger-500/20',
 
     // Loan statuses
     'dikembalikan' => 'bg-success-50 text-success-700 ring-1 ring-success-500/20',
