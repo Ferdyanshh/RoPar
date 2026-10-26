@@ -28,6 +28,7 @@ class AdminUserSeeder extends Seeder
             [
                 'full_name' => env('ADMIN_NAME', 'Admin RoPar'),
                 'phone' => '081234567890',
+                'address' => 'Alamat Admin RoPar',
             ],
         );
     }

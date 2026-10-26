@@ -11,6 +11,7 @@ use App\Models\Robot;
 use App\Models\RobotUnit;
 use App\Models\User;
 use Carbon\CarbonImmutable;
+use Database\Seeders\AdminUserSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
@@ -18,6 +19,17 @@ use Tests\TestCase;
 class BackendFlowTest extends TestCase
 {
     use RefreshDatabase;
+
+    public function test_admin_user_seeder_creates_a_profile_with_an_address(): void
+    {
+        $this->seed(AdminUserSeeder::class);
+
+        $this->assertDatabaseHas('profiles', [
+            'full_name' => 'Admin RoPar',
+            'phone' => '081234567890',
+            'address' => 'Alamat Admin RoPar',
+        ]);
+    }
 
     public function test_member_can_register_and_profile_is_created(): void
     {
