@@ -13,7 +13,7 @@ class LoanController extends Controller
     {
         $loans = Loan::query()
             ->where('user_id', $request->user()->id)
-            ->with(['unit.robot.categories:id,name', 'returnProcessor:id,name'])
+            ->with(['unit.robot.categories:id,name', 'returnProcessor:id,name', 'finePayments'])
             ->latest('loan_date')
             ->paginate(15);
 
@@ -24,10 +24,29 @@ class LoanController extends Controller
     {
         $validated = $request->validate([
             'robot_unit_id' => ['required', 'integer', 'exists:robot_units,id'],
+            'loan_date' => ['required', 'date_format:Y-m-d', 'after_or_equal:today'],
         ]);
 
-        $loan = $loanService->borrow($request->user(), $validated['robot_unit_id']);
+        $loan = $loanService->borrow($request->user(), $validated['robot_unit_id'], $validated['loan_date']);
 
         return response()->json(['data' => $loan], 201);
+    }
+
+    public function processReturn(Request $request, Loan $loan, LoanService $loanService): JsonResponse
+    {
+        abort_unless($loan->user_id === $request->user()->id, 404);
+
+        return response()->json([
+            'data' => $loanService->processReturn($loan, $request->user()),
+        ]);
+    }
+
+    public function cancelReservation(Request $request, Loan $loan, LoanService $loanService): JsonResponse
+    {
+        abort_unless($loan->user_id === $request->user()->id, 404);
+
+        return response()->json([
+            'data' => $loanService->cancelScheduledReservation($loan, $request->user()),
+        ]);
     }
 }

@@ -1,7 +1,7 @@
 # Progress Audit Backend dan Frontend RoPar
 
 **Update:** 26 Oktober 2026
-**Branch:** `be-ferdy` pada repo `test_codex` (`2265c1d` sebagai basis)
+**Branch:** `be-ferdy` pada repo `RoPar` (`2265c1d` sebagai basis)
 **Cakupan:** Implementasi tindak lanjut hasil perbandingan BRD, ERD, PRD, dan Flowchart.
 
 ## Fitur yang sudah tersedia
@@ -32,10 +32,10 @@
 ### Dokumentasi dan verifikasi
 
 - [x] README diperbarui: tautan PRD, versi stack, alamat repository, dan email anggota demo sudah sesuai.
-- [ ] Dokumen hasil UAT dan manual book belum ditemukan. README memiliki checklist UAT, tetapi itu belum menggantikan hasil uji yang tercatat.
+- [x] Dokumen hasil UAT dan manual book tersedia di `Documentations/`. Laporan UAT mencatat 16 skenario manual lulus sesuai konfirmasi pelaksana/pemilik proyek.
 - [x] Test root diperbarui untuk mengharapkan redirect guest ke login. Test suite terakhir: **11 lulus, 45 assertions**.
 - [x] Label denda di dashboard diperjelas sebagai konfirmasi admin; sistem tidak mengklaim menyediakan pembayaran online.
-- [ ] Hasil UAT manual dan manual book belum dibuat. Checklist UAT di README sudah ditandai sebagai skenario untuk dijalankan, bukan hasil uji.
+- [x] Hasil UAT manual dicatat lulus dan manual book sudah dibuat. Nama penguji dan bukti pendukung tetap dapat dilengkapi sebelum pengesahan akhir.
 
 ## Langkah berikutnya
 

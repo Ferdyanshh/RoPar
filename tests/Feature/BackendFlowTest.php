@@ -108,17 +108,42 @@ class BackendFlowTest extends TestCase
         $this->assertDatabaseCount('loans', 0);
     }
 
-    public function test_member_cannot_process_loan_return(): void
+    public function test_member_can_return_own_loan_but_cannot_return_another_members_loan(): void
     {
         $member = User::factory()->create();
         $unit = RobotUnit::factory()->create(['status' => RobotUnitStatus::Borrowed]);
-        $loan = Loan::factory()->create(['user_id' => $member->id, 'robot_unit_id' => $unit->id]);
+        $today = CarbonImmutable::today(config('app.timezone'));
+        $loan = Loan::factory()->create([
+            'user_id' => $member->id,
+            'robot_unit_id' => $unit->id,
+            'loan_date' => $today->subDays(5)->toDateString(),
+            'due_date' => $today->toDateString(),
+        ]);
 
         $this->actingAs($member)
-            ->postJson("/my-loans/{$loan->id}/return", ['return_date' => now()->subDay()->toDateString()])
+            ->postJson("/backend/loans/{$loan->id}/return", ['return_date' => $today->subDay()->toDateString()])
+            ->assertOk()
+            ->assertJsonPath('data.status', LoanStatus::Returned->value)
+            ->assertJsonPath('data.return_date', $today->toJSON())
+            ->assertJsonPath('data.late_days', 0)
+            ->assertJsonPath('data.fine_amount', 0);
+
+        $this->assertDatabaseHas('robot_units', [
+            'id' => $unit->id,
+            'status' => RobotUnitStatus::Available->value,
+        ]);
+
+        $otherMember = User::factory()->create();
+        $otherUnit = RobotUnit::factory()->create(['status' => RobotUnitStatus::Borrowed]);
+        $otherLoan = Loan::factory()->create([
+            'user_id' => $otherMember->id,
+            'robot_unit_id' => $otherUnit->id,
+        ]);
+
+        $this->postJson("/backend/loans/{$otherLoan->id}/return")
             ->assertNotFound();
 
-        $this->assertDatabaseHas('loans', ['id' => $loan->id, 'status' => LoanStatus::Borrowed->value]);
+        $this->assertDatabaseHas('loans', ['id' => $otherLoan->id, 'status' => LoanStatus::Borrowed->value]);
     }
 
     public function test_admin_return_updates_status_unit_and_late_fine_and_rejects_second_return(): void

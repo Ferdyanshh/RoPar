@@ -84,6 +84,11 @@
                 </div>
                 <x-sidebar-link href="/admin/loans/active" icon="clock" :active="request()->is('admin/loans/active')">Pinjaman Aktif</x-sidebar-link>
                 <x-sidebar-link href="/admin/loans/history" icon="history" :active="request()->is('admin/loans/history')">Riwayat</x-sidebar-link>
+                <a href="/admin/fine-payments" class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors {{ request()->is('admin/fine-payments*') ? 'bg-primary-50 text-primary-700 font-semibold' : 'text-surface-600 hover:bg-surface-100 hover:text-surface-800' }}">
+                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <span class="flex-1">Verifikasi Denda</span>
+                    <span x-data="finePaymentNotice()" x-init="init()" x-show="count > 0" x-text="count" class="rounded-full bg-danger-600 px-2 py-0.5 text-[10px] font-bold text-white"></span>
+                </a>
             @else
                 {{-- Member nav --}}
                 <x-sidebar-link href="/dashboard" icon="home" :active="request()->is('dashboard')">Dashboard</x-sidebar-link>
@@ -153,6 +158,24 @@
     </div>
 
     <script>
+        function finePaymentNotice() {
+            return {
+                count: 0,
+                async init() {
+                    await this.refresh();
+                    setInterval(() => this.refresh(), 30000);
+                },
+                async refresh() {
+                    try {
+                        const response = await api.get('/backend/admin/fine-payments/pending-count');
+                        this.count = Number(response.count || 0);
+                    } catch (_) {
+                        this.count = 0;
+                    }
+                }
+            }
+        }
+
         function toastManager() {
             return {
                 toasts: [],

@@ -1,2 +1,5 @@
 *
 !.gitignore
+!robots/
+robots/*
+!robots/*.png

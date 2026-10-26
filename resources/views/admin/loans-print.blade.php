@@ -88,6 +88,7 @@
                         <th class="p-2.5 border border-surface-300 font-bold">Tgl Kembali</th>
                         <th class="p-2.5 border border-surface-300 font-bold text-center">Terlambat</th>
                         <th class="p-2.5 border border-surface-300 font-bold text-right">Denda</th>
+                        <th class="p-2.5 border border-surface-300 font-bold text-center">Pembayaran Denda</th>
                         <th class="p-2.5 border border-surface-300 font-bold text-center">Status</th>
                     </tr>
                 </thead>
@@ -106,13 +107,14 @@
                             <td class="p-2 border border-surface-300" x-text="formatDate(loan.return_date)"></td>
                             <td class="p-2 border border-surface-300 text-center" x-text="loan.late_days ? loan.late_days + ' hr' : '-'"></td>
                             <td class="p-2 border border-surface-300 text-right font-mono" x-text="formatRupiah(loan.fine_amount || 0)"></td>
+                            <td class="p-2 border border-surface-300 text-center" x-text="finePaymentStatus(loan)"></td>
                             <td class="p-2 border border-surface-300 text-center font-semibold capitalize" x-text="loan.status"></td>
                         </tr>
                     </template>
                 </tbody>
                 <tfoot>
                     <tr class="bg-surface-50 font-bold border-t-2 border-surface-900">
-                        <td colspan="8" class="p-3 text-right border border-surface-300 uppercase">Total Penerimaan Denda:</td>
+                        <td colspan="9" class="p-3 text-right border border-surface-300 uppercase">Total Denda Terverifikasi:</td>
                         <td class="p-3 text-right font-mono text-sm border border-surface-300 font-black text-surface-900" x-text="formatRupiah(totalFineAmount)"></td>
                         <td class="border border-surface-300"></td>
                     </tr>
@@ -142,24 +144,39 @@
                 printDate: formatDate(new Date().toISOString()),
                 filterSummary: {
                     dateRange: 'Semua Periode',
+                    month: '',
                     status: '',
                     member: ''
                 },
 
                 get totalFineAmount() {
-                    return this.allLoans.reduce((sum, item) => sum + (Number(item.fine_amount) || 0), 0);
+                    return this.allLoans.reduce((sum, loan) => {
+                        const latestPayment = loan.fine_payments?.[0];
+                        return sum + (latestPayment?.status === 'lunas' ? Number(latestPayment.amount) || 0 : 0);
+                    }, 0);
+                },
+
+                finePaymentStatus(loan) {
+                    if (Number(loan.fine_amount) < 1) return '-';
+                    const status = loan.fine_payments?.[0]?.status;
+                    return { lunas: 'Lunas', menunggu: 'Menunggu verifikasi', ditolak: 'Ditolak' }[status] || 'Belum dibayar';
                 },
 
                 async init() {
                     const urlParams = new URLSearchParams(window.location.search);
                     const from = urlParams.get('from');
                     const to = urlParams.get('to');
+                    const month = urlParams.get('month');
                     const status = urlParams.get('status');
                     const member_id = urlParams.get('member_id');
                     const q = urlParams.get('q');
 
                     if (from || to) {
                         this.filterSummary.dateRange = (from ? formatDate(from) : 'Awal') + ' s/d ' + (to ? formatDate(to) : 'Sekarang');
+                    }
+                    if (month) {
+                        const [year, monthNumber] = month.split('-').map(Number);
+                        this.filterSummary.dateRange = new Intl.DateTimeFormat('id-ID', { month: 'long', year: 'numeric' }).format(new Date(year, monthNumber - 1, 1));
                     }
                     if (status) this.filterSummary.status = status;
 
@@ -173,6 +190,7 @@
                                 per_page: 100,
                                 page: page
                             };
+                            if (month) params.month = month;
                             if (from) params.from = from;
                             if (to) params.to = to;
                             if (status) params.status = status;

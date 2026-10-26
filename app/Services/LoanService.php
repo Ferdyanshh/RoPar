@@ -19,9 +19,9 @@ class LoanService
 
     private const int FINE_PER_LATE_DAY = 5000;
 
-    public function borrow(User $member, int $robotUnitId): Loan
+    public function borrow(User $member, int $robotUnitId, string $loanDateInput): Loan
     {
-        return DB::transaction(function () use ($member, $robotUnitId): Loan {
+        return DB::transaction(function () use ($member, $robotUnitId, $loanDateInput): Loan {
             $lockedMember = User::query()->lockForUpdate()->findOrFail($member->id);
             $activeLoanCount = Loan::query()
                 ->where('user_id', $lockedMember->id)
@@ -42,7 +42,15 @@ class LoanService
                 ]);
             }
 
-            $loanDate = CarbonImmutable::today(config('app.timezone'));
+            $loanDate = CarbonImmutable::parse($loanDateInput, config('app.timezone'))->startOfDay();
+            $today = CarbonImmutable::today(config('app.timezone'));
+
+            if ($loanDate->lt($today)) {
+                throw ValidationException::withMessages([
+                    'loan_date' => 'Tanggal mulai pinjam tidak boleh sebelum hari ini.',
+                ]);
+            }
+
             $loan = $lockedMember->loans()->create([
                 'robot_unit_id' => $unit->id,
                 'loan_date' => $loanDate,
@@ -56,9 +64,37 @@ class LoanService
         }, attempts: 3);
     }
 
-    public function processReturn(Loan $loan, User $admin): Loan
+    public function cancelScheduledReservation(Loan $loan, User $member): Loan
     {
-        return DB::transaction(function () use ($loan, $admin): Loan {
+        return DB::transaction(function () use ($loan, $member): Loan {
+            $lockedLoan = Loan::query()->lockForUpdate()->findOrFail($loan->id);
+
+            if ($lockedLoan->user_id !== $member->id || $lockedLoan->status !== LoanStatus::Borrowed || $lockedLoan->return_date !== null) {
+                throw ValidationException::withMessages([
+                    'loan' => 'Reservasi ini tidak dapat dibatalkan.',
+                ]);
+            }
+
+            $today = CarbonImmutable::today(config('app.timezone'));
+            $loanDate = CarbonImmutable::parse($lockedLoan->loan_date)->startOfDay();
+
+            if (! $loanDate->gt($today)) {
+                throw ValidationException::withMessages([
+                    'loan' => 'Reservasi hanya dapat dibatalkan sebelum tanggal mulai pinjam.',
+                ]);
+            }
+
+            $unit = RobotUnit::query()->lockForUpdate()->findOrFail($lockedLoan->robot_unit_id);
+            $lockedLoan->update(['status' => LoanStatus::Cancelled]);
+            $unit->update(['status' => RobotUnitStatus::Available]);
+
+            return $lockedLoan->fresh(['member.profile', 'unit.robot']);
+        }, attempts: 3);
+    }
+
+    public function processReturn(Loan $loan, User $processor): Loan
+    {
+        return DB::transaction(function () use ($loan, $processor): Loan {
             $lockedLoan = Loan::query()->lockForUpdate()->findOrFail($loan->id);
 
             if ($lockedLoan->status !== LoanStatus::Borrowed || $lockedLoan->return_date !== null) {
@@ -82,7 +118,7 @@ class LoanService
 
             $lockedLoan->update([
                 'return_date' => $processedAt->toDateString(),
-                'returned_by' => $admin->id,
+                'returned_by' => $processor->id,
                 'late_days' => $lateDays,
                 'fine_amount' => $lateDays * self::FINE_PER_LATE_DAY,
                 'status' => LoanStatus::Returned,

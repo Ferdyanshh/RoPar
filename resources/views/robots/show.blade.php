@@ -203,9 +203,9 @@
                                 <label class="block text-xs font-semibold text-surface-700 mb-1">
                                     📅 Tanggal Mulai Pinjam
                                 </label>
-                                <input type="date" x-model="borrowStartDate" @change="recalculateDuration"
+                                <input type="date" x-model="borrowStartDate" :min="todayDate()" @change="recalculateDuration"
                                        class="w-full px-3 py-2 bg-white border border-surface-300 rounded-xl text-xs font-medium focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none">
-                                <span class="text-[10px] text-surface-400 mt-0.5 block">Hari peminjaman aktif</span>
+                                <span class="text-[10px] text-surface-400 mt-0.5 block">Unit direservasi mulai tanggal ini</span>
                             </div>
 
                             {{-- Tanggal Rencana Pengembalian --}}
@@ -323,7 +323,7 @@
                         <button type="button" @click="confirmBorrow" :disabled="borrowing"
                                 class="px-5 py-2.5 bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white rounded-xl text-sm font-bold shadow transition disabled:opacity-50 cursor-pointer flex items-center gap-2">
                             <span x-show="borrowing" class="spinner"></span>
-                            <span x-text="borrowing ? 'Memproses...' : 'Ya, Pinjam Sekarang'"></span>
+                            <span x-text="borrowing ? 'Memproses...' : (borrowStartDate > todayDate() ? 'Reservasi Unit' : 'Ya, Pinjam Sekarang')"></span>
                         </button>
                     </div>
                 </div>
@@ -365,7 +365,7 @@
                 },
 
                 recalculateDuration() {
-                    if (!this.borrowStartDate) this.borrowStartDate = todayDate();
+                    if (!this.borrowStartDate || this.borrowStartDate < todayDate()) this.borrowStartDate = todayDate();
                     this.dueDate = addDays(this.borrowStartDate, 5);
                     if (!this.borrowPlanDate || this.borrowPlanDate < this.borrowStartDate) {
                         this.borrowPlanDate = this.dueDate;
@@ -383,9 +383,16 @@
                     this.borrowing = true;
                     try {
                         await api.post('/backend/loans', {
-                            robot_unit_id: this.selectedUnit.id
+                            robot_unit_id: this.selectedUnit.id,
+                            loan_date: this.borrowStartDate
                         });
-                        window.dispatchEvent(new CustomEvent('toast', { detail: { message: 'Berhasil meminjam robot!', type: 'success' } }));
+                        const isReservation = this.borrowStartDate > todayDate();
+                        window.dispatchEvent(new CustomEvent('toast', {
+                            detail: {
+                                message: isReservation ? 'Reservasi robot berhasil. Unit akan mulai dipinjam pada tanggal pilihan.' : 'Berhasil meminjam robot!',
+                                type: 'success'
+                            }
+                        }));
                         setTimeout(() => {
                             window.location.href = '/my-loans';
                         }, 500);

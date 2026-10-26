@@ -37,7 +37,7 @@ class DemoLoanSeeder extends Seeder
         $secondMember = User::query()->updateOrCreate(
             ['email' => 'member2@robotpacar.test'],
             [
-                'name' => 'Anggota Demo 2',
+                'name' => 'Andi Demo',
                 'password' => Hash::make(env('DEMO_MEMBER_PASSWORD', 'password')),
                 'role' => UserRole::Member,
             ],
@@ -45,8 +45,11 @@ class DemoLoanSeeder extends Seeder
 
         $secondMember->profile()->updateOrCreate(
             ['user_id' => $secondMember->id],
-            ['full_name' => 'Anggota Demo 2', 'phone' => '081234567892', 'address' => 'Alamat Anggota Demo 2'],
+            ['full_name' => 'Andi Demo', 'phone' => '081234567892', 'address' => 'Alamat Andi Demo'],
         );
+
+        $today = CarbonImmutable::today(config('app.timezone'));
+        $this->seedAndiLoan($secondMember, $today);
 
         if ($member->loans()->exists()) {
             return;
@@ -58,7 +61,6 @@ class DemoLoanSeeder extends Seeder
             throw new RuntimeException('RobotCatalogSeeder must create units AYA-001, AYA-002, RIO-001, and RIO-002 first.');
         }
 
-        $today = CarbonImmutable::today(config('app.timezone'));
         $member->loans()->create([
             'robot_unit_id' => $units['AYA-001']->id,
             'loan_date' => $today,
@@ -97,5 +99,31 @@ class DemoLoanSeeder extends Seeder
             'fine_amount' => 10000,
             'status' => LoanStatus::Returned,
         ]);
+    }
+
+    private function seedAndiLoan(User $member, CarbonImmutable $today): void
+    {
+        if ($member->loans()->exists()) {
+            return;
+        }
+
+        $unit = RobotUnit::query()
+            ->whereNotIn('unit_code', ['AYA-001', 'AYA-002', 'RIO-001', 'RIO-002'])
+            ->where('status', RobotUnitStatus::Available->value)
+            ->orderBy('unit_code')
+            ->first();
+
+        if ($unit === null) {
+            throw new RuntimeException('DemoLoanSeeder membutuhkan satu unit robot tambahan yang tersedia untuk Andi Demo.');
+        }
+
+        $member->loans()->create([
+            'robot_unit_id' => $unit->id,
+            'loan_date' => $today,
+            'due_date' => $today->addDays(5),
+            'status' => LoanStatus::Borrowed,
+        ]);
+
+        $unit->update(['status' => RobotUnitStatus::Borrowed]);
     }
 }
