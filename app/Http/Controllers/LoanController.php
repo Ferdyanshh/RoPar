@@ -15,7 +15,7 @@ class LoanController extends Controller
             ->where('user_id', $request->user()->id)
             ->with(['unit.robot.categories:id,name', 'returnProcessor:id,name'])
             ->latest('loan_date')
-            ->paginate(20);
+            ->paginate(15);
 
         return response()->json($loans);
     }

@@ -11,9 +11,11 @@ use Illuminate\Validation\ValidationException;
 
 class RobotController extends Controller
 {
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        return response()->json(Robot::query()->with('categories:id,name')->withCount('units')->orderBy('name')->paginate(25));
+        $filters = $request->validate(['per_page' => ['sometimes', 'integer', 'min:1', 'max:100']]);
+
+        return response()->json(Robot::query()->with('categories:id,name')->withCount('units')->orderBy('name')->paginate($filters['per_page'] ?? 15));
     }
 
     public function store(Request $request): JsonResponse
@@ -66,7 +68,7 @@ class RobotController extends Controller
     private function validatedData(Request $request, bool $updating = false): array
     {
         return $request->validate([
-            'name' => [$updating ? 'sometimes' : 'required', 'string', 'max:120'],
+            'name' => [$updating ? 'sometimes' : 'required', 'string', 'max:150'],
             'model' => ['sometimes', 'nullable', 'string', 'max:80'],
             'description' => ['sometimes', 'nullable', 'string'],
             'category_ids' => [$updating ? 'sometimes' : 'required', 'array', 'min:1'],

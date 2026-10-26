@@ -1,8 +1,8 @@
 # Progress Audit Backend dan Frontend RoPar
 
-**Tanggal audit:** 23 Oktober 2026  
-**Branch:** `main` (`e0ca0d6`)  
-**Cakupan:** Perbandingan implementasi dengan BRD, ERD, PRD, dan Flowchart. Audit ini hanya membaca kode; belum ada temuan yang diperbaiki.
+**Update:** 26 Oktober 2026
+**Branch:** `be-ferdy` pada repo `test_codex` (`2265c1d` sebagai basis)
+**Cakupan:** Implementasi tindak lanjut hasil perbandingan BRD, ERD, PRD, dan Flowchart.
 
 ## Fitur yang sudah tersedia
 
@@ -18,27 +18,27 @@
 
 ### Prioritas tinggi
 
-- [ ] **Pengembalian anggota tidak sesuai BR-11 dan PRD FR-22.** Halaman Pinjaman Saya menampilkan tombol pengembalian dan backend menerima pengembalian dari anggota. Request juga menerima `return_date` dari browser, sehingga anggota dapat mengirim tanggal lampau dan mengubah perhitungan denda. Tentukan kembali perilaku yang diminta dokumen; bila dokumen tetap berlaku, proses pengembalian harus dilakukan admin saja.
-- [ ] **Tanggal simulasi di halaman pengembalian admin tidak konsisten.** Frontend mengirim tanggal pilihan, tetapi backend memproses tanggal hari ini. Hilangkan simulasi tanggal pada proses final atau sepakati aturan tanggal dan implementasikan konsisten pada kedua sisi.
+- [x] **Pengembalian anggota sesuai BR-11 dan PRD FR-22.** Tombol, modal, handler, dan route pengembalian anggota dihapus. Anggota diarahkan menghubungi admin.
+- [x] **Tanggal pengembalian admin konsisten.** Form menampilkan tanggal saat ini tanpa simulasi; server menghitung serta mengembalikan tanggal dan denda final. Frontend memakai hasil server.
 
 ### Prioritas menengah
 
-- [ ] **Validasi profil berbeda dari PRD.** Alamat dibuat opsional, padahal PRD meminta wajib. Format telepon di aplikasi hanya menerima 10–15 digit, sedangkan PRD menyebut 8–15 karakter angka dan tanda `+`.
-- [ ] **Aturan kategori dan status unit berbeda dari ERD/PRD.** Penghapusan kategori saat ini menghapus relasi kategori-robot, sementara ERD menyebut pembatasan relasi. Status unit aplikasi memakai `perawatan` dan `hilang`, sedangkan dokumen memakai `rusak`.
-- [ ] **Batas panjang field berbeda dari PRD.** Kategori, nama robot, dan kode unit di aplikasi memiliki batas lebih pendek daripada yang didokumentasikan.
-- [ ] **Data demo belum sesuai skenario PRD.** Katalog seeder memakai nama robot/kategori berbeda. Seeder pinjaman membuat satu pinjaman aktif normal dan dua pinjaman selesai; PRD meminta contoh satu pinjaman aktif terlambat dan satu selesai berdenda.
-- [ ] **Pagination admin menggunakan 25 data per halaman**, sedangkan NFR-05 menyebut 10–15 data.
+- [x] **Validasi profil diselaraskan dengan PRD.** Alamat wajib di form/API dan skema; nomor telepon menerima 8–15 karakter, dengan `+` opsional di depan.
+- [x] **Aturan kategori dan status unit diselaraskan.** Kategori yang masih dipakai robot ditolak dengan pesan validasi dan FK restrict. Status unit kini `tersedia/dipinjam/rusak`; migrasi memetakan status lama.
+- [x] **Batas field diselaraskan.** Kategori maksimal 100, nama robot 150, dan kode unit 50 karakter. Format kode tidak dibatasi ke `RBT-###`.
+- [x] **Data demo diselaraskan.** Seeder memakai katalog Aya/Rio/Luna/Dio, dua anggota contoh, satu pinjaman aktif normal, satu aktif terlambat, serta pinjaman selesai berdenda.
+- [x] **Pagination daftar menggunakan 15 data secara default**, sesuai NFR-05. Endpoint tetap mendukung ukuran lebih besar untuk dashboard dan laporan.
 
 ### Dokumentasi dan verifikasi
 
-- [ ] README memiliki tautan PRD yang salah, keterangan versi teknologi lama, dan instruksi repository GitLab yang belum sesuai repo ini.
+- [x] README diperbarui: tautan PRD, versi stack, alamat repository, dan email anggota demo sudah sesuai.
 - [ ] Dokumen hasil UAT dan manual book belum ditemukan. README memiliki checklist UAT, tetapi itu belum menggantikan hasil uji yang tercatat.
-- [ ] Test suite terakhir: **6 lulus, 1 gagal, 27 assertions**. Test bawaan `ExampleTest` mengharapkan `/` berstatus 200, sedangkan route saat ini mengarahkan guest ke login dengan status 302. Perlu putuskan apakah test atau perilaku route yang harus disesuaikan.
-- [ ] Label dashboard “Perlu Diselesaikan” untuk denda perlu diperjelas. Dokumen mengecualikan pembayaran online; denda dicatat dan dikonfirmasi admin.
+- [x] Test root diperbarui untuk mengharapkan redirect guest ke login. Test suite terakhir: **11 lulus, 45 assertions**.
+- [x] Label denda di dashboard diperjelas sebagai konfirmasi admin; sistem tidak mengklaim menyediakan pembayaran online.
+- [ ] Hasil UAT manual dan manual book belum dibuat. Checklist UAT di README sudah ditandai sebagai skenario untuk dijalankan, bukan hasil uji.
 
 ## Langkah berikutnya
 
-1. Sepakati apakah dokumen tetap menjadi acuan untuk pengembalian admin-only dan format data.
-2. Benahi temuan prioritas tinggi terlebih dahulu.
-3. Selaraskan validasi, status unit, seed demo, pagination, dan dokumentasi.
-4. Jalankan ulang test suite dan lakukan UAT untuk skenario PRD sebelum merge/push.
+1. Jalankan UAT manual untuk skenario PRD dan catat hasilnya.
+2. Buat manual book setelah alur UAT disepakati.
+3. Review lalu push perubahan dari branch `be-ferdy` jika sudah siap.

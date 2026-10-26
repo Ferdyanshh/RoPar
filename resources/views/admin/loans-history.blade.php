@@ -172,7 +172,7 @@
 
                     const params = {
                         page: this.currentPage,
-                        per_page: 25
+                        per_page: 15
                     };
                     if (this.filter.from) params.from = this.filter.from;
                     if (this.filter.to) params.to = this.filter.to;

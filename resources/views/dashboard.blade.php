@@ -169,13 +169,13 @@
                         <div>
                             <div class="flex items-center gap-2">
                                 <h4 class="font-bold text-base text-danger-900">Total Denda Keterlambatan: <span class="text-danger-700" x-text="formatRupiah(totalFine)"></span></h4>
-                                <span class="px-2.5 py-0.5 text-[10px] font-extrabold uppercase rounded-full bg-danger-200 text-danger-900 tracking-wider">Perlu Diselesaikan</span>
+                                <span class="px-2.5 py-0.5 text-[10px] font-extrabold uppercase rounded-full bg-danger-200 text-danger-900 tracking-wider">Konfirmasi Admin</span>
                             </div>
-                            <p class="text-xs text-danger-700 mt-0.5" x-text="fineSubtitle + '. Denda dihitung Rp5.000 / hari keterlambatan.'"></p>
+                            <p class="text-xs text-danger-700 mt-0.5" x-text="fineSubtitle + '. Denda dicatat sistem dan dikonfirmasi admin.'"></p>
                         </div>
                     </div>
                     <a href="/my-loans" class="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-danger-600 hover:bg-danger-700 text-white text-xs font-bold rounded-xl transition shadow flex-shrink-0">
-                        <span>Lihat Rincian di Pinjaman Saya</span>
+                        <span>Lihat Riwayat di Pinjaman Saya</span>
                         <span>→</span>
                     </a>
                 </div>
@@ -267,10 +267,7 @@
                                                     Sisa <span x-text="calculateRemainingDays(loan.due_date)"></span> hari lagi
                                                 </span>
                                             </template>
-                                            <a href="/my-loans" class="text-xs font-bold text-primary-600 hover:text-primary-700 inline-flex items-center gap-1">
-                                                <span>Kembalikan Unit</span>
-                                                <span>→</span>
-                                            </a>
+                                            <span class="text-xs font-semibold text-surface-500">Hubungi admin untuk pengembalian</span>
                                         </div>
                                     </div>
                                 </div>

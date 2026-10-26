@@ -144,7 +144,7 @@
                             </div>
                             <div>
                                 <label class="block text-xs font-medium text-surface-700 mb-1">Nomor Telepon <span class="text-danger-500">*</span></label>
-                                <input type="text" x-model="form.phone" required pattern="\d{10,15}" inputmode="numeric" maxlength="15"
+                                <input type="tel" x-model="form.phone" required pattern="(?:[0-9]{8,15}|\+[0-9]{7,14})" inputmode="tel" maxlength="15"
                                        class="w-full px-3 py-2 bg-white border border-surface-300 rounded-xl text-xs focus:ring-2 focus:ring-primary-500/40">
                                 <template x-if="errors?.phone"><template x-for="msg in errors.phone" :key="msg"><p class="text-xs text-danger-600 mt-1" x-text="msg"></p></template></template>
                             </div>
@@ -158,9 +158,10 @@
                                 <template x-if="errors?.birth_date"><template x-for="msg in errors.birth_date" :key="msg"><p class="text-xs text-danger-600 mt-1" x-text="msg"></p></template></template>
                             </div>
                             <div>
-                                <label class="block text-xs font-medium text-surface-700 mb-1">Alamat</label>
-                                <textarea x-model="form.address" rows="2"
+                                <label class="block text-xs font-medium text-surface-700 mb-1">Alamat <span class="text-danger-500">*</span></label>
+                                <textarea x-model="form.address" rows="2" required
                                           class="w-full px-3 py-2 bg-white border border-surface-300 rounded-xl text-xs focus:ring-2 focus:ring-primary-500/40 resize-y"></textarea>
+                                <template x-if="errors?.address"><template x-for="msg in errors.address" :key="msg"><p class="text-xs text-danger-600 mt-1" x-text="msg"></p></template></template>
                             </div>
                         </div>
                     </div>
@@ -284,7 +285,8 @@
                     }
                     if (!this.form.full_name) this.errors.full_name = ['Nama lengkap wajib diisi.'];
                     if (!this.form.phone) this.errors.phone = ['Nomor telepon wajib diisi.'];
-                    else if (!/^\d{10,15}$/.test(this.form.phone)) this.errors.phone = ['No. HP harus 10-15 digit angka.'];
+                    else if (!/^(?:[0-9]{8,15}|\+[0-9]{7,14})$/.test(this.form.phone)) this.errors.phone = ['No. HP harus 8–15 karakter angka dan boleh diawali tanda +.'];
+                    if (!this.form.address.trim()) this.errors.address = ['Alamat wajib diisi.'];
 
                     return Object.keys(this.errors).length === 0;
                 },

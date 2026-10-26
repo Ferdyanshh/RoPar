@@ -20,8 +20,8 @@ class AuthController extends Controller
             'email' => ['required', 'email', 'max:150', 'unique:users,email'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
             'full_name' => ['required', 'string', 'max:150'],
-            'phone' => ['required', 'regex:/^\d{10,15}$/'],
-            'address' => ['nullable', 'string'],
+            'phone' => ['required', 'regex:/^(?:[0-9]{8,15}|\+[0-9]{7,14})$/'],
+            'address' => ['required', 'string'],
             'birth_date' => ['nullable', 'date', 'before:today'],
         ]);
 

@@ -43,7 +43,7 @@ class LoanReportController extends Controller
                 });
             })
             ->latest('loan_date')
-            ->paginate($filters['per_page'] ?? 25)
+            ->paginate($filters['per_page'] ?? 15)
             ->withQueryString();
 
         return response()->json($loans);

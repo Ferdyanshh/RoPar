@@ -79,7 +79,7 @@
                             </label>
                             <span class="text-xs text-surface-400" x-text="(form.name?.length || 0) + '/80'"></span>
                         </div>
-                        <input type="text" x-model="form.name" required maxlength="80" placeholder="Contoh: Tsundere, Romantis, Android"
+                        <input type="text" x-model="form.name" required maxlength="100" placeholder="Contoh: Tsundere, Romantis, Android"
                                class="w-full px-3.5 py-2.5 bg-white border border-surface-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/40 focus:border-primary-500 transition-colors">
                         <template x-if="errors?.name"><template x-for="msg in errors.name" :key="msg"><p class="text-xs text-danger-600 mt-1" x-text="msg"></p></template></template>
                     </div>

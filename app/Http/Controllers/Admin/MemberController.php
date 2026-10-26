@@ -17,7 +17,10 @@ class MemberController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $filters = $request->validate(['q' => ['nullable', 'string', 'max:150']]);
+        $filters = $request->validate([
+            'q' => ['nullable', 'string', 'max:150'],
+            'per_page' => ['sometimes', 'integer', 'min:1', 'max:100'],
+        ]);
 
         $members = User::query()
             ->with('profile')
@@ -30,7 +33,7 @@ class MemberController extends Controller
             })
             ->where('role', UserRole::Member->value)
             ->orderBy('name')
-            ->paginate(25);
+            ->paginate($filters['per_page'] ?? 15);
 
         return response()->json($members);
     }
@@ -42,8 +45,8 @@ class MemberController extends Controller
             'email' => ['required', 'email', 'max:150', 'unique:users,email'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
             'full_name' => ['required', 'string', 'max:150'],
-            'phone' => ['required', 'regex:/^\d{10,15}$/'],
-            'address' => ['nullable', 'string'],
+            'phone' => ['required', 'regex:/^(?:[0-9]{8,15}|\+[0-9]{7,14})$/'],
+            'address' => ['required', 'string'],
             'birth_date' => ['nullable', 'date', 'before:today'],
         ]);
 
@@ -77,8 +80,8 @@ class MemberController extends Controller
             'email' => ['sometimes', 'required', 'email', 'max:150', Rule::unique('users', 'email')->ignore($member)],
             'password' => ['sometimes', 'required', 'string', 'min:8', 'confirmed'],
             'full_name' => ['sometimes', 'required', 'string', 'max:150'],
-            'phone' => ['sometimes', 'required', 'regex:/^\d{10,15}$/'],
-            'address' => ['sometimes', 'nullable', 'string'],
+            'phone' => ['sometimes', 'required', 'regex:/^(?:[0-9]{8,15}|\+[0-9]{7,14})$/'],
+            'address' => ['sometimes', 'required', 'string'],
             'birth_date' => ['sometimes', 'nullable', 'date', 'before:today'],
         ]);
 

@@ -6,6 +6,5 @@ enum RobotUnitStatus: string
 {
     case Available = 'tersedia';
     case Borrowed = 'dipinjam';
-    case Maintenance = 'perawatan';
-    case Lost = 'hilang';
+    case Damaged = 'rusak';
 }
