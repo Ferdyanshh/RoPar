@@ -67,10 +67,10 @@
                                 </td>
                                 <td class="px-6 py-4 font-bold text-xs">
                                     <template x-if="calculateLateDays(loan.due_date) > 0">
-                                        <span class="text-danger-600" x-text="formatCurrency(calculateFine(loan.due_date))"></span>
+                                        <span class="text-danger-600" x-text="formatRupiah(calculateFine(loan.due_date))"></span>
                                     </template>
                                     <template x-if="calculateLateDays(loan.due_date) === 0">
-                                        <span class="text-surface-400" x-text="formatCurrency(0)"></span>
+                                        <span class="text-surface-400">Rp0</span>
                                     </template>
                                 </td>
                                 <td class="px-6 py-4 text-right">
@@ -150,7 +150,7 @@
                         <p class="font-bold text-sm" x-text="Number(returnResult.fine_amount ?? 0) > 0 ? 'Pengembalian Berhasil Diproses (Terlambat)' : 'Pengembalian Berhasil Diproses Tepat Waktu!'"></p>
                         <p>Tanggal Kembali: <span class="font-semibold" x-text="formatDate(returnResult.return_date)"></span></p>
                         <p>Keterlambatan: <span class="font-bold" x-text="Number(returnResult.late_days ?? 0) > 0 ? 'Telat ' + returnResult.late_days + ' hari' : 'Tepat Waktu (0 hari)'"></span></p>
-                        <p>Denda Final: <span class="font-bold text-sm" :class="Number(returnResult.fine_amount ?? 0) > 0 ? 'text-rose-700' : 'text-emerald-700'" x-text="formatCurrency(returnResult.fine_amount ?? 0)"></span></p>
+                        <p>Denda Final: <span class="font-bold text-sm" :class="Number(returnResult.fine_amount ?? 0) > 0 ? 'text-rose-700' : 'text-emerald-700'" x-text="formatRupiah(returnResult.fine_amount ?? 0)"></span></p>
                     </div>
                 </template>
 
@@ -217,7 +217,7 @@
                         const finalLateDays = Number(this.returnResult.late_days ?? 0);
                         const finalFineAmount = Number(this.returnResult.fine_amount ?? 0);
                         const fineMsg = finalLateDays > 0
-                            ? ' Pengembalian tercatat Telat ' + finalLateDays + ' hari. Denda: ' + formatCurrency(finalFineAmount) + '.'
+                            ? ' Pengembalian tercatat Telat ' + finalLateDays + ' hari. Denda: ' + formatRupiah(finalFineAmount) + '.'
                             : ' Pengembalian tepat waktu (Bebas Denda).';
                         window.dispatchEvent(new CustomEvent('toast', { detail: { message: 'Pengembalian robot berhasil diproses!' + fineMsg, type: finalLateDays > 0 ? 'warning' : 'success' } }));
                         setTimeout(() => {

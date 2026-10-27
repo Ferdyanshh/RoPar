@@ -1,9 +1,9 @@
 # 🤖 Sistem Peminjaman Robot Pacar
 
-[![Laravel](https://img.shields.io/badge/Laravel-10.x-FF2D20?style=for-the-badge&logo=laravel&logoColor=white)](https://laravel.com)
-[![PHP](https://img.shields.io/badge/PHP-8.2-777BB4?style=for-the-badge&logo=php&logoColor=white)](https://php.net)
+[![Laravel](https://img.shields.io/badge/Laravel-13.x-FF2D20?style=for-the-badge&logo=laravel&logoColor=white)](https://laravel.com)
+[![PHP](https://img.shields.io/badge/PHP-8.3-777BB4?style=for-the-badge&logo=php&logoColor=white)](https://php.net)
 [![MySQL](https://img.shields.io/badge/MySQL-8.0-4479A1?style=for-the-badge&logo=mysql&logoColor=white)](https://www.mysql.com)
-[![TailwindCSS](https://img.shields.io/badge/TailwindCSS-3.x-38BDF8?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com)
+[![TailwindCSS](https://img.shields.io/badge/TailwindCSS-4.x-38BDF8?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com)
 
 Sistem Web Peminjaman Robot Pacar adalah platform terpusat untuk mengelola katalog, unit robot, keanggotaan, transaksi peminjaman, pengembalian, serta kalkulasi denda otomatis. Sistem ini dirancang untuk menghilangkan kesalahan pencatatan manual, mencegah stok yang tidak sinkron, dan mempermudah pelaporan.
 
@@ -15,7 +15,7 @@ Sistem Web Peminjaman Robot Pacar adalah platform terpusat untuk mengelola katal
 - **Anggota Team:**
   - Muhammad Ferdyansyah  - PM / 102022300141
   - Benedictus Chally Nugroho - Member / 102022300293
-  - Rayhan Aliffio Wibow - Member / 102022500103
+  - Rayhan Aliffio Wibowo - Member / 102022500103
 
 ---
 
@@ -26,7 +26,7 @@ Dokumentasi lengkap pengembangan proyek ini dapat diakses pada berkas markdown b
 - 📄 [Business Requirements Document (BRD)](/Documentations/BRD.md)
 - 🗄️ [Entity Relationship Diagram (ERD)](/Documentations/ERD.md)
 - 🔀 [Flowchart / Process Flow](/Documentations/Flowchart.md)
-- 📋 [Product Requirements Document (PRD)](/DocumentationsPRD.md)
+- 📋 [Product Requirements Document (PRD)](/Documentations/PRD.md)
 
 ---
 
@@ -47,7 +47,7 @@ Dokumentasi lengkap pengembangan proyek ini dapat diakses pada berkas markdown b
 - **Katalog & Pencarian:** Pencarian robot interaktif berdasarkan nama model maupun kategori.
 - **Peminjaman Mandiri:** Meminjam unit robot yang sedang tersedia.
 - **Pinjaman Saya:** Memantau daftar unit yang sedang dipinjam, tanggal jatuh tempo, dan estimasi denda berjalan.
-- **Manajemen Profil:** Mengubah data profil diri (1 user = 1 profil) serta memilih tampilan mata uang Rupiah atau US Dollar.
+- **Manajemen Profil:** Mengubah data profil diri (1 user = 1 profil).
 
 ---
 
@@ -74,11 +74,11 @@ Denda           = Hari Terlambat × Rp 5.000
 
 ## 🛠️ Stack Teknologi
 
-- **Backend Framework:** Laravel 10.x (PHP 8.2+)
+- **Backend Framework:** Laravel 13.x (PHP 8.3+)
 - **Database:** MySQL 8.0
-- **Frontend:** Blade Templates, Tailwind CSS / Bootstrap 5
-- **Authentication:** Laravel Breeze / Session Authentication
-- **Export / Print:** Browser Native Print `@media print` / DomPDF
+- **Frontend:** Blade Templates, Tailwind CSS 4, Alpine.js
+- **Authentication:** Laravel session authentication
+- **Export / Print:** Browser Native Print `@media print`
 
 ---
 
@@ -101,7 +101,7 @@ erDiagram
 ## 🚀 Panduan Instalasi & Memulai (Getting Started)
 
 ### Prasyarat System
-- PHP `>= 8.1`
+- PHP `>= 8.3`
 - Composer `>= 2.x`
 - MySQL / MariaDB
 - Node.js & NPM
@@ -110,8 +110,8 @@ erDiagram
 
 1. **Clone Repository**
    ```bash
-   git clone https://gitlab.com/username/sistem-peminjaman-robot-pacar.git
-   cd sistem-peminjaman-robot-pacar
+   git clone https://github.com/Ferdyanshh/RoPar.git
+   cd RoPar
    ```
 
 2. **Instal Dependencies (PHP & JS)**
@@ -161,17 +161,17 @@ Gunakan akun awal berikut untuk keperluan pengujian (UAT) setelah menjalankan `p
 | Role | Email | Password | Akses Utama |
 |---|---|---|---|
 | **Admin** | `admin@robotpacar.test` | `password` | Kelola master data, pengembalian, cetak laporan |
-| **Anggota** | `anggota@robotpacar.test` | `password` | Cari robot, buat peminjaman, lihat denda |
+| **Anggota** | `member@robotpacar.test` | `password` | Cari robot, buat peminjaman, lihat denda |
 
 ---
 
 ## 🧪 Pengujian (UAT Scenarios)
 
-Pengujian dilakukan untuk memastikan seluruh aturan bisnis berjalan presisi:
-- [x] Anggota tidak bisa meminjam lebih dari 2 unit sekaligus.
-- [x] Perhitungan denda tepat (Rp0 untuk <= 5 hari, Rp15.000 untuk keterlambatan 3 hari).
-- [x] Otorisasi role bekerja (Anggota mengakses rute Admin menghasilkan `403 Forbidden`).
-- [x] Validasi kode unit unik dan FK restriction saat penghapusan data master.
+Jalankan automated test dengan `php artisan test`. Skenario UAT manual perlu dicatat terpisah setelah diuji melalui aplikasi:
+- Anggota tidak bisa meminjam lebih dari 2 unit sekaligus.
+- Perhitungan denda tepat (Rp0 untuk <= 5 hari, Rp15.000 untuk keterlambatan 3 hari).
+- Anggota yang mengakses rute Admin mendapat `403 Forbidden`.
+- Kode unit harus unik dan kategori yang masih digunakan robot tidak dapat dihapus.
 
 ---
 

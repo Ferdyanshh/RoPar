@@ -132,16 +132,16 @@
                                                 <span class="inline-flex items-center gap-1.5 rounded-lg border border-info-200 bg-info-50 px-3 py-1 text-xs font-bold text-info-700">Dijadwalkan</span>
                                             </template>
                                             <template x-if="!isScheduled(loan) && calculateLateDays(loan.due_date) > 0">
-                                                <span class="text-danger-600" x-text="formatCurrency(calculateFine(loan.due_date)) + ' (berjalan)'"></span>
+                                                <span class="text-danger-600" x-text="formatRupiah(calculateFine(loan.due_date)) + ' (berjalan)'"></span>
                                             </template>
                                             <template x-if="!isScheduled(loan) && calculateLateDays(loan.due_date) === 0">
-                                                <span class="text-surface-400" x-text="formatCurrency(0)"></span>
+                                                <span class="text-surface-400">Rp0</span>
                                             </template>
                                         </div>
                                     </template>
                                     <template x-if="activeTab === 'riwayat'">
                                         <span :class="loan.fine_amount > 0 ? 'text-danger-600' : 'text-surface-600'"
-                                              x-text="formatCurrency(loan.fine_amount || 0)"></span>
+                                              x-text="formatRupiah(loan.fine_amount || 0)"></span>
                                     </template>
                                 </td>
                                 <td class="px-6 py-4">

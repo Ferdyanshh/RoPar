@@ -107,7 +107,7 @@
                                 </td>
                                 <td class="px-5 py-3.5 text-xs font-bold">
                                     <span :class="loan.fine_amount > 0 ? 'text-danger-600' : 'text-surface-500'"
-                                          x-text="formatCurrency(loan.fine_amount || 0)"></span>
+                                          x-text="formatRupiah(loan.fine_amount || 0)"></span>
                                 </td>
                                 <td class="px-5 py-3.5">
                                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-lg text-xs font-semibold capitalize"

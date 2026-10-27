@@ -8,10 +8,6 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ $title }} — RoPar</title>
     <meta name="description" content="RoPar — Sistem Peminjaman Robot Pacar">
-    <script>
-        window.currentCurrency = @json(auth()->user()->currency);
-        window.idrPerUsd = @json(config('currency.idr_per_usd'));
-    </script>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="min-h-screen bg-surface-50" x-data="{ sidebarOpen: false }">

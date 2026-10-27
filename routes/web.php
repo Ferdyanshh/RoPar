@@ -1,11 +1,20 @@
 <?php
 
+use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
+use App\Http\Controllers\Admin\FinePaymentController as AdminFinePaymentController;
+use App\Http\Controllers\Admin\LoanController as AdminLoanController;
+use App\Http\Controllers\Admin\LoanReportController;
+use App\Http\Controllers\Admin\MemberController;
+use App\Http\Controllers\Admin\RobotController as AdminRobotController;
+use App\Http\Controllers\Admin\RobotUnitController;
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\FinePaymentController;
+use App\Http\Controllers\LoanController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\RobotCatalogController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-<<<<<<< Updated upstream
-    return view('welcome');
-=======
     return auth()->check() ? redirect()->route('dashboard') : redirect()->route('login');
 });
 
@@ -93,8 +102,7 @@ Route::middleware('auth')->group(function (): void {
         Route::view('/members', 'admin.members')->name('members');
         Route::view('/loans/active', 'admin.loans-active')->name('loans.active');
         Route::view('/loans/history', 'admin.loans-history')->name('loans.history');
-        Route::get('/loans/history/print', [LoanReportController::class, 'print'])->name('loans.print');
+        Route::view('/loans/history/print', 'admin.loans-print')->name('loans.print');
         Route::view('/fine-payments', 'admin.fine-payments')->name('fine-payments');
     });
->>>>>>> Stashed changes
 });

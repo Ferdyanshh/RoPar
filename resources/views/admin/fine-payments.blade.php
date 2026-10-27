@@ -45,7 +45,7 @@
                                     <p class="font-semibold" x-text="payment.loan?.unit?.robot?.name || '-'"></p>
                                     <p class="text-xs text-surface-500" x-text="(payment.loan?.unit?.unit_code || '-') + ' · ' + formatDate(payment.loan?.loan_date)"></p>
                                 </td>
-                                <td class="px-5 py-4 font-bold" x-text="formatCurrency(payment.amount)"></td>
+                                <td class="px-5 py-4 font-bold" x-text="formatRupiah(payment.amount)"></td>
                                 <td class="px-5 py-4">
                                     <a :href="'/backend/admin/fine-payments/' + payment.id + '/proof'" target="_blank" class="font-semibold text-primary-600 underline">Lihat bukti</a>
                                     <div class="mt-1">
@@ -115,7 +115,7 @@
                 },
 
                 async approve(payment) {
-                    if (!window.confirm('Setujui pembayaran denda sebesar ' + formatCurrency(payment.amount) + '?')) return;
+                    if (!window.confirm('Setujui pembayaran denda sebesar ' + formatRupiah(payment.amount) + '?')) return;
                     await this.process(payment, 'approve', {});
                 },
 

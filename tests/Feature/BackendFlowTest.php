@@ -79,55 +79,9 @@ class BackendFlowTest extends TestCase
 
         $member = User::factory()->create(['role' => UserRole::Member]);
         $this->actingAs($member)->getJson('/backend/admin/categories')->assertForbidden();
-        $this->getJson('/admin/loans/history/print')->assertForbidden();
 
         $admin = User::factory()->create(['role' => UserRole::Admin]);
         $this->actingAs($admin)->getJson('/backend/admin/categories')->assertOk();
-    }
-
-    public function test_member_and_admin_can_update_their_display_currency(): void
-    {
-        $member = User::factory()->create();
-        $this->actingAs($member)
-            ->patchJson('/backend/profile', ['currency' => 'USD'])
-            ->assertOk()
-            ->assertJsonPath('data.currency', 'USD');
-        $this->assertDatabaseHas('users', ['id' => $member->id, 'currency' => 'USD']);
-
-        $admin = User::factory()->create(['role' => UserRole::Admin]);
-        $this->actingAs($admin)
-            ->patchJson('/backend/profile', ['currency' => 'IDR'])
-            ->assertOk()
-            ->assertJsonPath('data.currency', 'IDR');
-        $this->assertDatabaseHas('users', ['id' => $admin->id, 'currency' => 'IDR']);
-
-        $this->patchJson('/backend/profile', ['currency' => 'EUR'])
-            ->assertUnprocessable()
-            ->assertJsonValidationErrors(['currency']);
-    }
-
-    public function test_admin_can_generate_a_pdf_for_the_filtered_loan_history(): void
-    {
-        $admin = User::factory()->create(['role' => UserRole::Admin]);
-        $member = User::factory()->create();
-        $unit = RobotUnit::factory()->create();
-        Loan::factory()->create([
-            'user_id' => $member->id,
-            'robot_unit_id' => $unit->id,
-            'status' => LoanStatus::Returned,
-        ]);
-
-        $response = $this->actingAs($admin)
-            ->getJson('/admin/loans/history/print?status='.LoanStatus::Returned->value);
-
-        $response->assertOk()
-            ->assertHeader('content-type', 'application/pdf')
-            ->assertHeader('content-disposition', 'inline; filename=laporan-riwayat-peminjaman.pdf');
-        $this->assertStringStartsWith('%PDF-', $response->getContent());
-
-        $this->getJson('/admin/loans/history/print?from=2026-10-25&to=2026-10-20')
-            ->assertUnprocessable()
-            ->assertJsonValidationErrors(['from']);
     }
 
     public function test_member_can_borrow_available_unit_and_is_limited_to_two_active_loans(): void

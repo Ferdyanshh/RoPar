@@ -124,9 +124,9 @@ Jika sudah memiliki dua pinjaman aktif, permintaan berikutnya ditolak. Anggota t
 ### 5.5 Mengubah profil
 
 1. Buka **Profil Saya** (`/profile`).
-2. Ubah username, nama lengkap, nomor telepon, alamat, mata uang tampilan (Rupiah atau US Dollar), atau tanggal lahir. Pilihan mata uang berada tepat di bawah alamat domisili dan berlaku untuk akun anggota maupun admin.
+2. Ubah username, nama lengkap, nomor telepon, alamat, atau tanggal lahir.
 3. Email akun ditampilkan sebagai informasi dan tidak dapat diubah di form ini.
-4. Tekan **Simpan Perubahan**. Jumlah denda ditampilkan dalam mata uang yang dipilih, dikonversi menggunakan kurs tetap yang dapat diatur melalui `IDR_PER_USD`. Data denda tetap disimpan dalam Rupiah.
+4. Tekan **Simpan Perubahan**. Field wajib dan format nomor telepon divalidasi.
 
 ## 6. Panduan Admin
 

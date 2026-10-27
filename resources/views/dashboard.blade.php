@@ -72,7 +72,7 @@
                                         <template x-if="calculateLateDays(loan.due_date) > 0">
                                             <div class="flex items-center gap-2">
                                                 <x-badge-status status="terlambat" />
-                                                <span class="text-xs font-bold text-danger-600" x-text="'+ ' + formatCurrency(calculateFine(loan.due_date))"></span>
+                                                <span class="text-xs font-bold text-danger-600" x-text="'+ ' + formatRupiah(calculateFine(loan.due_date))"></span>
                                             </div>
                                         </template>
                                         <template x-if="calculateLateDays(loan.due_date) === 0">
@@ -156,7 +156,7 @@
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <x-stat-card title="Pinjaman Aktif" value="activeCount + ' / 2'" icon="clock" color="primary" subtitle="'Maksimal 2 unit pinjaman bersamaan'" />
                 <x-stat-card title="Jatuh Tempo Terdekat" value="nearestDueText" icon="alert" color="warning" subtitle="'Durasi pinjam standar 5 hari'" />
-                <x-stat-card title="Total Denda" value="formatCurrency(totalFine)" icon="money" color="danger" subtitle="fineSubtitle" />
+                <x-stat-card title="Total Denda" value="formatRupiah(totalFine)" icon="money" color="danger" subtitle="fineSubtitle" />
             </div>
 
             {{-- Denda Alert Banner --}}
@@ -168,7 +168,7 @@
                         </div>
                         <div>
                             <div class="flex items-center gap-2">
-                                <h4 class="font-bold text-base text-danger-900">Total Denda Belum Lunas: <span class="text-danger-700" x-text="formatCurrency(totalFine)"></span></h4>
+                                <h4 class="font-bold text-base text-danger-900">Total Denda Belum Lunas: <span class="text-danger-700" x-text="formatRupiah(totalFine)"></span></h4>
                                 <span class="px-2.5 py-0.5 text-[10px] font-extrabold uppercase rounded-full bg-danger-200 text-danger-900 tracking-wider">Perlu Dibayar</span>
                             </div>
                             <p class="text-xs text-danger-700 mt-0.5" x-text="fineSubtitle + '. Pembayaran menunggu persetujuan admin setelah bukti dikirim.'"></p>
@@ -262,7 +262,7 @@
                                                     <span class="inline-block px-2 py-0.5 rounded text-xs font-bold bg-danger-100 text-danger-700">
                                                         Terlambat <span x-text="calculateLateDays(loan.due_date)"></span> hari
                                                     </span>
-                                                    <p class="text-xs text-danger-600 font-bold mt-0.5" x-text="'Denda: ' + formatCurrency(calculateFine(loan.due_date))"></p>
+                                                    <p class="text-xs text-danger-600 font-bold mt-0.5" x-text="'Denda: ' + formatRupiah(calculateFine(loan.due_date))"></p>
                                                 </div>
                                             </template>
                                             <template x-if="!isScheduled(loan) && calculateLateDays(loan.due_date) === 0">
@@ -328,12 +328,12 @@
                                                         <span class="inline-block px-2 py-0.5 rounded text-xs font-bold bg-danger-100 text-danger-700">
                                                             Terlambat <span x-text="loan.late_days || 0"></span> hari
                                                         </span>
-                                                        <p class="text-xs text-danger-600 font-bold mt-0.5" x-text="'Denda: ' + formatCurrency(loan.fine_amount)"></p>
+                                                        <p class="text-xs text-danger-600 font-bold mt-0.5" x-text="'Denda: ' + formatRupiah(loan.fine_amount)"></p>
                                                     </div>
                                                 </template>
                                                 <template x-if="!loan.fine_amount || loan.fine_amount === 0">
                                                     <span class="text-xs font-semibold text-success-600 bg-success-50 px-2.5 py-1 rounded-lg">
-                                                        Tepat Waktu (Denda <span x-text="formatCurrency(0)"></span>)
+                                                        Tepat Waktu (Denda Rp0)
                                                     </span>
                                                 </template>
                                             </div>
@@ -373,7 +373,7 @@
                     historyFine: 0,
                     finedHistoryCount: 0,
                     returningLoanId: null,
-                    fineSubtitle: formatCurrency(5000) + ' / hari keterlambatan',
+                    fineSubtitle: 'Rp5.000 / hari keterlambatan',
                     loading: true,
 
                     async init() {
@@ -428,14 +428,14 @@
 
                             if (this.totalFine > 0) {
                                 if (this.activeFine > 0 && this.historyFine > 0) {
-                                    this.fineSubtitle = 'Riwayat: ' + formatCurrency(this.historyFine) + ' • Berjalan: ' + formatCurrency(this.activeFine);
+                                    this.fineSubtitle = 'Riwayat: ' + formatRupiah(this.historyFine) + ' • Berjalan: ' + formatRupiah(this.activeFine);
                                 } else if (this.historyFine > 0) {
                                     this.fineSubtitle = 'Denda riwayat pengembalian (' + this.finedHistoryCount + ' unit terlambat)';
                                 } else {
                                     this.fineSubtitle = 'Estimasi denda unit belum dikembalikan';
                                 }
                             } else {
-                                this.fineSubtitle = formatCurrency(5000) + ' / hari keterlambatan';
+                                this.fineSubtitle = 'Rp5.000 / hari keterlambatan';
                             }
 
                             if (earliestDue) {

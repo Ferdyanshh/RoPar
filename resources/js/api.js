@@ -160,27 +160,15 @@ function formatDate(isoString) {
 }
 
 /**
- * Format a stored IDR amount in the user's selected display currency.
+ * Format number to Indonesian Rupiah
  */
-function formatCurrency(amount) {
-    const currency = window.currentCurrency === 'USD' ? 'USD' : 'IDR';
-    const value = Number(amount ?? 0);
-    if (currency === 'USD' && (!Number.isFinite(Number(window.idrPerUsd)) || Number(window.idrPerUsd) <= 0)) {
-        throw new RangeError('The IDR per USD exchange rate must be a positive number.');
-    }
-    const convertedValue = currency === 'USD'
-        ? value / Number(window.idrPerUsd)
-        : value;
-
-    return new Intl.NumberFormat(currency === 'USD' ? 'en-US' : 'id-ID', {
-        style: 'currency',
-        currency,
-        maximumFractionDigits: currency === 'USD' ? 2 : 0
-    }).format(convertedValue);
-}
-
 function formatRupiah(amount) {
-    return formatCurrency(amount);
+    if (amount === null || amount === undefined) return 'Rp0';
+    return new Intl.NumberFormat('id-ID', {
+        style: 'currency',
+        currency: 'IDR',
+        maximumFractionDigits: 0
+    }).format(amount);
 }
 
 /**
@@ -255,7 +243,6 @@ window.api = api;
 window.separateErrors = separateErrors;
 window.toLocalDateString = toLocalDateString;
 window.formatDate = formatDate;
-window.formatCurrency = formatCurrency;
 window.formatRupiah = formatRupiah;
 window.calculateLateDays = calculateLateDays;
 window.calculateFine = calculateFine;

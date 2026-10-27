@@ -266,14 +266,14 @@
                                     <div class="flex items-center justify-between mb-1.5">
                                         <div class="flex items-center gap-1.5 font-bold text-xs text-emerald-800">
                                             <svg class="w-4 h-4 text-emerald-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-                                            <span x-text="'BEBAS DENDA (' + formatCurrency(0) + ')'"></span>
+                                            <span>BEBAS DENDA (Rp 0)</span>
                                         </div>
                                         <span class="px-2 py-0.5 bg-emerald-200 text-emerald-800 text-[10px] font-bold rounded-md">
                                             Durasi: <span x-text="borrowDurationDays"></span> Hari (≤ 5 Hari)
                                         </span>
                                     </div>
                                     <p class="text-xs text-emerald-700">
-                                        Rencana pengembalian <strong x-text="formatDate(borrowPlanDate)"></strong> masih dalam batas standar 5 hari (jatuh tempo: <strong x-text="formatDate(dueDate)"></strong>). <strong>Estimasi Denda: <span x-text="formatCurrency(0)"></span></strong>.
+                                        Rencana pengembalian <strong x-text="formatDate(borrowPlanDate)"></strong> masih dalam batas standar 5 hari (jatuh tempo: <strong x-text="formatDate(dueDate)"></strong>). <strong>Estimasi Denda: Rp0</strong>.
                                     </p>
                                 </div>
                             </template>
@@ -296,7 +296,7 @@
                                         <div class="flex items-center justify-between pt-1 border-t border-rose-200 font-bold">
                                             <span>Perhitungan Denda:</span>
                                             <span class="text-sm text-rose-700">
-                                                <span x-text="borrowDurationDays - 5"></span> hari × <span x-text="formatCurrency(5000)"></span> = <span x-text="formatCurrency((borrowDurationDays - 5) * 5000)"></span>
+                                                <span x-text="borrowDurationDays - 5"></span> hari × Rp5.000 = <span x-text="formatRupiah((borrowDurationDays - 5) * 5000)"></span>
                                             </span>
                                         </div>
                                     </div>
