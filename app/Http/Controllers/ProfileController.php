@@ -21,15 +21,17 @@ class ProfileController extends Controller
             'phone' => ['sometimes', 'required', 'regex:/^(?:[0-9]{8,15}|\+[0-9]{7,14})$/'],
             'address' => ['sometimes', 'required', 'string'],
             'birth_date' => ['sometimes', 'nullable', 'date', 'before:today'],
+            'currency' => ['sometimes', 'required', 'in:IDR,USD'],
         ]);
 
         $user = $request->user();
         DB::transaction(function () use ($user, $validated): void {
-            $user->update(collect($validated)->only(['name'])->all());
-            $user->profile()->updateOrCreate(
-                ['user_id' => $user->id],
-                collect($validated)->only(['full_name', 'phone', 'address', 'birth_date'])->all(),
-            );
+            $user->update(collect($validated)->only(['name', 'currency'])->all());
+            $profileData = collect($validated)->only(['full_name', 'phone', 'address', 'birth_date'])->all();
+
+            if ($profileData !== []) {
+                $user->profile()->updateOrCreate(['user_id' => $user->id], $profileData);
+            }
         });
 
         return response()->json(['data' => $user->fresh()->load('profile')]);

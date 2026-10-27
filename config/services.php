@@ -35,4 +35,8 @@ return [
         ],
     ],
 
+    'exchange_rates' => [
+        'url' => env('EXCHANGE_RATE_URL', 'https://open.er-api.com/v6/latest/IDR'),
+    ],
+
 ];

@@ -67,6 +67,10 @@ async function request(method, url, data = null, isFormData = false) {
             return Promise.reject({ message: 'Terlalu banyak percobaan, coba lagi sebentar.' });
         }
 
+        if (response.status === 503) {
+            return Promise.reject({ message: body.message || 'Layanan sementara tidak tersedia.' });
+        }
+
         if (response.status >= 500) {
             return Promise.reject({ message: 'Terjadi kesalahan pada server. Silakan coba lagi.' });
         }
@@ -160,16 +164,30 @@ function formatDate(isoString) {
 }
 
 /**
- * Format number to Indonesian Rupiah
+ * Format a stored Rupiah amount in the user's preferred display currency.
  */
 function formatRupiah(amount) {
-    if (amount === null || amount === undefined) return 'Rp0';
+    const value = Number(amount ?? 0);
+
+    if (window.currentCurrency === 'USD') {
+        const idrToUsdRate = window.Alpine?.store('currency')?.rate ?? window.idrToUsdRate;
+        if (!Number.isFinite(idrToUsdRate)) return '$—';
+
+        return new Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency: 'USD',
+            maximumFractionDigits: 2
+        }).format(value * idrToUsdRate);
+    }
+
     return new Intl.NumberFormat('id-ID', {
         style: 'currency',
         currency: 'IDR',
         maximumFractionDigits: 0
-    }).format(amount);
+    }).format(value);
 }
+
+const formatCurrency = formatRupiah;
 
 /**
  * Calculate days late from due_date (ISO string or YYYY-MM-DD)
@@ -244,6 +262,7 @@ window.separateErrors = separateErrors;
 window.toLocalDateString = toLocalDateString;
 window.formatDate = formatDate;
 window.formatRupiah = formatRupiah;
+window.formatCurrency = formatCurrency;
 window.calculateLateDays = calculateLateDays;
 window.calculateFine = calculateFine;
 window.calculateRemainingDays = calculateRemainingDays;

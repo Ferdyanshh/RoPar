@@ -101,6 +101,8 @@
                     loading: true,
 
                     async init() {
+                        window.addEventListener('currency-rate-updated', () => this.updateFineSubtitle());
+
                         try {
                             const [resRobots, resUnits, resMembers, resLoans] = await Promise.all([
                                 api.get('/backend/admin/robots', { per_page: 1 }),
@@ -333,7 +335,7 @@
                                                 </template>
                                                 <template x-if="!loan.fine_amount || loan.fine_amount === 0">
                                                     <span class="text-xs font-semibold text-success-600 bg-success-50 px-2.5 py-1 rounded-lg">
-                                                        Tepat Waktu (Denda Rp0)
+                                                        Tepat Waktu (Denda <span x-text="formatRupiah(0)"></span>)
                                                     </span>
                                                 </template>
                                             </div>
@@ -373,7 +375,7 @@
                     historyFine: 0,
                     finedHistoryCount: 0,
                     returningLoanId: null,
-                    fineSubtitle: 'Rp5.000 / hari keterlambatan',
+                    fineSubtitle: formatRupiah(5000) + ' / hari keterlambatan',
                     loading: true,
 
                     async init() {
@@ -426,17 +428,7 @@
                             this.finedHistoryCount = finedCount;
                             this.totalFine = sumActiveFine + sumHistoryFine;
 
-                            if (this.totalFine > 0) {
-                                if (this.activeFine > 0 && this.historyFine > 0) {
-                                    this.fineSubtitle = 'Riwayat: ' + formatRupiah(this.historyFine) + ' • Berjalan: ' + formatRupiah(this.activeFine);
-                                } else if (this.historyFine > 0) {
-                                    this.fineSubtitle = 'Denda riwayat pengembalian (' + this.finedHistoryCount + ' unit terlambat)';
-                                } else {
-                                    this.fineSubtitle = 'Estimasi denda unit belum dikembalikan';
-                                }
-                            } else {
-                                this.fineSubtitle = 'Rp5.000 / hari keterlambatan';
-                            }
+                            this.updateFineSubtitle();
 
                             if (earliestDue) {
                                 this.nearestDueText = formatDate(earliestDue.toISOString());
@@ -447,6 +439,20 @@
                             console.error(err);
                         } finally {
                             this.loading = false;
+                        }
+                    },
+
+                    updateFineSubtitle() {
+                        if (this.totalFine > 0) {
+                            if (this.activeFine > 0 && this.historyFine > 0) {
+                                this.fineSubtitle = 'Riwayat: ' + formatRupiah(this.historyFine) + ' • Berjalan: ' + formatRupiah(this.activeFine);
+                            } else if (this.historyFine > 0) {
+                                this.fineSubtitle = 'Denda riwayat pengembalian (' + this.finedHistoryCount + ' unit terlambat)';
+                            } else {
+                                this.fineSubtitle = 'Estimasi denda unit belum dikembalikan';
+                            }
+                        } else {
+                            this.fineSubtitle = formatRupiah(5000) + ' / hari keterlambatan';
                         }
                     },
 

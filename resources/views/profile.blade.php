@@ -64,6 +64,21 @@
                         </div>
 
                         <div>
+                            <label for="currency" class="block text-sm font-medium text-surface-700 mb-1.5">
+                                Mata Uang
+                            </label>
+                            <select id="currency" x-model="form.currency"
+                                    class="w-full px-3.5 py-2.5 bg-white border border-surface-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/40 focus:border-primary-500 transition-colors">
+                                <option value="IDR">Rupiah (Rp)</option>
+                                <option value="USD">US Dollar ($)</option>
+                            </select>
+                            <p class="text-xs text-surface-400 mt-1">
+                                Tampilan denda dan jumlah uang dikonversi memakai kurs terbaru. <span x-text="exchangeRateText"></span>
+                            </p>
+                            <template x-if="errors?.currency"><template x-for="msg in errors.currency" :key="msg"><p class="text-xs text-danger-600 mt-1" x-text="msg"></p></template></template>
+                        </div>
+
+                        <div>
                             <label class="block text-sm font-medium text-surface-700 mb-1.5">
                                 Tanggal Lahir
                             </label>
@@ -94,8 +109,10 @@
                     full_name: '',
                     phone: '',
                     address: '',
-                    birth_date: ''
+                    birth_date: '',
+                    currency: 'IDR'
                 },
+                exchangeRateText: 'Memuat kurs...',
                 errors: {},
                 saving: false,
 
@@ -111,6 +128,7 @@
                         const data = res.data || {};
                         this.email = data.email || '';
                         this.form.name = data.name || '';
+                        this.form.currency = data.currency || 'IDR';
                         if (data.profile) {
                             this.form.full_name = data.profile.full_name || '';
                             this.form.phone = data.profile.phone || '';
@@ -119,6 +137,10 @@
                                 this.form.birth_date = data.profile.birth_date.substring(0, 10);
                             }
                         }
+                        const exchangeRate = await window.exchangeRatePromise;
+                        this.exchangeRateText = exchangeRate
+                            ? `$1 = ${new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(1 / exchangeRate.idr_to_usd)} (diperbarui ${exchangeRate.updated_at})`
+                            : 'Kurs tidak tersedia saat ini.';
                     } catch (err) {
                         window.dispatchEvent(new CustomEvent('toast', { detail: { message: 'Gagal memuat profil', type: 'error' } }));
                     }
@@ -144,7 +166,9 @@
 
                     try {
                         await api.patch('/backend/profile', this.form);
+                        window.currentCurrency = this.form.currency;
                         window.dispatchEvent(new CustomEvent('toast', { detail: { message: 'Profil berhasil diperbarui!', type: 'success' } }));
+                        window.setTimeout(() => window.location.reload(), 700);
                     } catch (err) {
                         if (err.errors) {
                             const { fieldErrors, toastMessages } = separateErrors(err.errors);

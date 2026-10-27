@@ -273,7 +273,7 @@
                                         </span>
                                     </div>
                                     <p class="text-xs text-emerald-700">
-                                        Rencana pengembalian <strong x-text="formatDate(borrowPlanDate)"></strong> masih dalam batas standar 5 hari (jatuh tempo: <strong x-text="formatDate(dueDate)"></strong>). <strong>Estimasi Denda: Rp0</strong>.
+                                        Rencana pengembalian <strong x-text="formatDate(borrowPlanDate)"></strong> masih dalam batas standar 5 hari (jatuh tempo: <strong x-text="formatDate(dueDate)"></strong>). <strong>Estimasi Denda: <span x-text="formatRupiah(0)"></span></strong>.
                                     </p>
                                 </div>
                             </template>
@@ -296,7 +296,7 @@
                                         <div class="flex items-center justify-between pt-1 border-t border-rose-200 font-bold">
                                             <span>Perhitungan Denda:</span>
                                             <span class="text-sm text-rose-700">
-                                                <span x-text="borrowDurationDays - 5"></span> hari × Rp5.000 = <span x-text="formatRupiah((borrowDurationDays - 5) * 5000)"></span>
+                                                <span x-text="borrowDurationDays - 5"></span> hari × <span x-text="formatRupiah(5000)"></span> = <span x-text="formatRupiah((borrowDurationDays - 5) * 5000)"></span>
                                             </span>
                                         </div>
                                     </div>

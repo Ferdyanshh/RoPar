@@ -13,7 +13,9 @@ use App\Models\User;
 use Carbon\CarbonImmutable;
 use Database\Seeders\AdminUserSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 class BackendFlowTest extends TestCase
@@ -76,12 +78,56 @@ class BackendFlowTest extends TestCase
     public function test_backend_requires_auth_and_members_cannot_access_admin_routes(): void
     {
         $this->getJson('/backend/profile')->assertUnauthorized();
+        $this->getJson('/backend/exchange-rate')->assertUnauthorized();
 
         $member = User::factory()->create(['role' => UserRole::Member]);
         $this->actingAs($member)->getJson('/backend/admin/categories')->assertForbidden();
 
         $admin = User::factory()->create(['role' => UserRole::Admin]);
         $this->actingAs($admin)->getJson('/backend/admin/categories')->assertOk();
+    }
+
+    public function test_users_can_save_either_currency_preference(): void
+    {
+        $member = User::factory()->create(['currency' => 'IDR']);
+        $admin = User::factory()->create(['role' => UserRole::Admin, 'currency' => 'IDR']);
+
+        $this->actingAs($member)->getJson('/backend/profile')
+            ->assertOk()
+            ->assertJsonPath('data.currency', 'IDR');
+
+        $this->patchJson('/backend/profile', ['currency' => 'USD'])
+            ->assertOk()
+            ->assertJsonPath('data.currency', 'USD');
+        $this->assertDatabaseHas('users', ['id' => $member->id, 'currency' => 'USD']);
+
+        $this->actingAs($admin)->patchJson('/backend/profile', ['currency' => 'USD'])
+            ->assertOk()
+            ->assertJsonPath('data.currency', 'USD');
+
+        $this->patchJson('/backend/profile', ['currency' => 'EUR'])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['currency']);
+    }
+
+    public function test_exchange_rate_endpoint_returns_the_current_idr_to_usd_rate(): void
+    {
+        Http::fake([
+            'open.er-api.com/v6/latest/IDR' => Http::response([
+                'result' => 'success',
+                'time_last_update_utc' => 'Mon, 26 Oct 2026 00:00:01 +0000',
+                'rates' => ['USD' => 0.000061],
+            ]),
+        ]);
+        Cache::forget('exchange_rates.idr_to_usd');
+
+        $this->actingAs(User::factory()->create())
+            ->getJson('/backend/exchange-rate')
+            ->assertOk()
+            ->assertJsonPath('data.idr_to_usd', 0.000061)
+            ->assertJsonPath('data.updated_at', 'Mon, 26 Oct 2026 00:00:01 +0000');
+
+        Http::assertSentCount(1);
     }
 
     public function test_member_can_borrow_available_unit_and_is_limited_to_two_active_loans(): void

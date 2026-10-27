@@ -70,7 +70,7 @@
                                         <span class="text-danger-600" x-text="formatRupiah(calculateFine(loan.due_date))"></span>
                                     </template>
                                     <template x-if="calculateLateDays(loan.due_date) === 0">
-                                        <span class="text-surface-400">Rp0</span>
+                                        <span class="text-surface-400" x-text="formatRupiah(0)"></span>
                                     </template>
                                 </td>
                                 <td class="px-6 py-4 text-right">

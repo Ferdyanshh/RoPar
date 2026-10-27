@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\MemberController;
 use App\Http\Controllers\Admin\RobotController as AdminRobotController;
 use App\Http\Controllers\Admin\RobotUnitController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\ExchangeRateController;
 use App\Http\Controllers\FinePaymentController;
 use App\Http\Controllers\LoanController;
 use App\Http\Controllers\ProfileController;
@@ -26,6 +27,7 @@ Route::prefix('backend')->name('backend.')->group(function (): void {
         Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
         Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
         Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+        Route::get('/exchange-rate', [ExchangeRateController::class, 'show'])->name('exchange-rate.show');
         Route::get('/categories', [RobotCatalogController::class, 'categories'])->name('categories.index');
         Route::get('/robots', [RobotCatalogController::class, 'index'])->name('robots.index');
         Route::get('/robots/{robot}', [RobotCatalogController::class, 'show'])->name('robots.show');
