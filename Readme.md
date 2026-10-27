@@ -47,7 +47,7 @@ Dokumentasi lengkap pengembangan proyek ini dapat diakses pada berkas markdown b
 - **Katalog & Pencarian:** Pencarian robot interaktif berdasarkan nama model maupun kategori.
 - **Peminjaman Mandiri:** Meminjam unit robot yang sedang tersedia.
 - **Pinjaman Saya:** Memantau daftar unit yang sedang dipinjam, tanggal jatuh tempo, dan estimasi denda berjalan.
-- **Manajemen Profil:** Mengubah data profil diri (1 user = 1 profil).
+- **Manajemen Profil:** Mengubah data profil diri (1 user = 1 profil) serta memilih tampilan mata uang Rupiah atau US Dollar.
 
 ---
 
