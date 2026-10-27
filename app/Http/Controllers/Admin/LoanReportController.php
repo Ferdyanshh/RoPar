@@ -2,28 +2,24 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Enums\FinePaymentStatus;
 use App\Enums\LoanStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Loan;
+use App\Models\User;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Validation\Rule;
 
 class LoanReportController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $filters = $request->validate([
-            'status' => ['nullable', Rule::enum(LoanStatus::class)],
-            'member_id' => ['nullable', 'integer', 'exists:users,id'],
-            'from' => ['nullable', 'date'],
-            'to' => ['nullable', 'date'],
-            'month' => ['nullable', 'date_format:Y-m'],
-            'q' => ['nullable', 'string', 'max:150'],
-            'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
-        ]);
+        $filters = $this->validatedFilters($request);
 
         if (isset($filters['from'], $filters['to']) && $filters['from'] > $filters['to']) {
             return response()->json([
@@ -39,10 +35,80 @@ class LoanReportController extends Controller
             ], 422);
         }
 
+        $loans = $this->filteredLoans($filters)
+            ->paginate($filters['per_page'] ?? 15)
+            ->withQueryString();
+
+        return response()->json($loans);
+    }
+
+    public function print(Request $request): Response
+    {
+        $filters = $this->validatedFilters($request);
+
+        abort_if($this->hasInvalidDateFilters($filters), 422, 'Tanggal atau kombinasi filter tidak valid.');
+
+        $member = isset($filters['member_id'])
+            ? User::query()->with('profile')->findOrFail($filters['member_id'])
+            : null;
+        $monthStart = isset($filters['month'])
+            ? CarbonImmutable::parse($filters['month'].'-01')->startOfMonth()
+            : null;
+
+        $loans = $this->filteredLoans($filters)->get();
+        $totalFineAmount = $loans->sum(function (Loan $loan): int {
+            $latestPayment = $loan->finePayments->first();
+
+            return $latestPayment?->status === FinePaymentStatus::Paid ? $latestPayment->amount : 0;
+        });
+
+        return Pdf::loadView('admin.loans-print', [
+            'loans' => $loans,
+            'filters' => $filters,
+            'member' => $member,
+            'monthStart' => $monthStart,
+            'printedAt' => now(),
+            'totalFineAmount' => $totalFineAmount,
+        ])
+            ->setPaper('a4', 'landscape')
+            ->stream('laporan-riwayat-peminjaman.pdf');
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function validatedFilters(Request $request): array
+    {
+        return $request->validate([
+            'status' => ['nullable', Rule::enum(LoanStatus::class)],
+            'member_id' => ['nullable', 'integer', 'exists:users,id'],
+            'from' => ['nullable', 'date'],
+            'to' => ['nullable', 'date'],
+            'month' => ['nullable', 'date_format:Y-m'],
+            'q' => ['nullable', 'string', 'max:150'],
+            'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
+        ]);
+    }
+
+    /**
+     * @param  array<string, mixed>  $filters
+     */
+    private function hasInvalidDateFilters(array $filters): bool
+    {
+        return (isset($filters['from'], $filters['to']) && $filters['from'] > $filters['to'])
+            || (isset($filters['month']) && (isset($filters['from']) || isset($filters['to'])));
+    }
+
+    /**
+     * @param  array<string, mixed>  $filters
+     * @return Builder<Loan>
+     */
+    private function filteredLoans(array $filters): Builder
+    {
         $monthStart = isset($filters['month']) ? CarbonImmutable::parse($filters['month'].'-01')->startOfMonth() : null;
         $monthEnd = $monthStart?->endOfMonth();
 
-        $loans = Loan::query()
+        return Loan::query()
             ->with(['member.profile', 'unit.robot', 'returnProcessor:id,name', 'finePayments.reviewer:id,name'])
             ->when($filters['status'] ?? null, fn (Builder $query, string $status) => $query->where('status', $status))
             ->when($filters['member_id'] ?? null, fn (Builder $query, int $memberId) => $query->where('user_id', $memberId))
@@ -55,10 +121,6 @@ class LoanReportController extends Controller
                         ->orWhereHas('unit', fn (Builder $unit) => $unit->where('unit_code', 'like', '%'.$term.'%')->orWhereHas('robot', fn (Builder $robot) => $robot->where('name', 'like', '%'.$term.'%')));
                 });
             })
-            ->latest('loan_date')
-            ->paginate($filters['per_page'] ?? 15)
-            ->withQueryString();
-
-        return response()->json($loans);
+            ->latest('loan_date');
     }
 }

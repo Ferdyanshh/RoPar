@@ -104,7 +104,7 @@ Route::middleware('auth')->group(function (): void {
         Route::view('/members', 'admin.members')->name('members');
         Route::view('/loans/active', 'admin.loans-active')->name('loans.active');
         Route::view('/loans/history', 'admin.loans-history')->name('loans.history');
-        Route::view('/loans/history/print', 'admin.loans-print')->name('loans.print');
+        Route::get('/loans/history/print', [LoanReportController::class, 'print'])->name('loans.print');
         Route::view('/fine-payments', 'admin.fine-payments')->name('fine-payments');
     });
 });
