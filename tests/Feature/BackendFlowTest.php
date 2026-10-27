@@ -88,9 +88,11 @@ class BackendFlowTest extends TestCase
     {
         $member = User::factory()->create();
         $firstUnit = RobotUnit::factory()->create();
+        $loanDate = CarbonImmutable::today(config('app.timezone'))->toDateString();
 
         $this->actingAs($member)->postJson('/backend/loans', [
             'robot_unit_id' => $firstUnit->id,
+            'loan_date' => $loanDate,
         ])->assertCreated()
             ->assertJsonPath('data.status', LoanStatus::Borrowed->value)
             ->assertJsonPath('data.due_date', CarbonImmutable::today(config('app.timezone'))->addDays(5)->toJSON());
@@ -101,10 +103,16 @@ class BackendFlowTest extends TestCase
         ]);
 
         $secondUnit = RobotUnit::factory()->create();
-        $this->postJson('/backend/loans', ['robot_unit_id' => $secondUnit->id])->assertCreated();
+        $this->postJson('/backend/loans', [
+            'robot_unit_id' => $secondUnit->id,
+            'loan_date' => $loanDate,
+        ])->assertCreated();
 
         $thirdUnit = RobotUnit::factory()->create();
-        $this->postJson('/backend/loans', ['robot_unit_id' => $thirdUnit->id])->assertUnprocessable();
+        $this->postJson('/backend/loans', [
+            'robot_unit_id' => $thirdUnit->id,
+            'loan_date' => $loanDate,
+        ])->assertUnprocessable();
         $this->assertDatabaseMissing('loans', ['robot_unit_id' => $thirdUnit->id]);
     }
 
@@ -115,6 +123,7 @@ class BackendFlowTest extends TestCase
 
         $this->actingAs($member)->postJson('/backend/loans', [
             'robot_unit_id' => $unit->id,
+            'loan_date' => CarbonImmutable::today(config('app.timezone'))->toDateString(),
         ])->assertUnprocessable();
 
         $this->assertDatabaseCount('loans', 0);
