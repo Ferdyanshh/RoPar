@@ -90,21 +90,25 @@ flowchart TD
     B --> C[Klik Pinjam]
     C --> D{Anggota terdaftar dan login?}
     D -- Tidak --> X1[Redirect ke login]
-    D -- Ya --> E{Pinjaman aktif kurang dari 2?}
-    E -- Tidak --> X2[Tolak: batas maksimal 2 unit tercapai]
-    E -- Ya --> F{Status unit = tersedia?}
-    F -- Tidak --> X3[Tolak: unit tidak tersedia]
-    F -- Ya --> G[Mulai DB transaction]
-    G --> H[Buat data loan]
-    H --> I[tanggal_pinjam = hari ini]
-    I --> J[tanggal_jatuh_tempo = tanggal_pinjam + 5 hari]
-    J --> K[Ubah status unit menjadi dipinjam]
-    K --> L[Commit transaction]
-    L --> M[Tampilkan konfirmasi dan jatuh tempo]
-    M --> E1([Selesai])
+    D -- Ya --> E{Tanggal mulai mendatang?}
+    E -- Ya --> F{Reservasi anggota < kuota reservasi?}
+    E -- Tidak --> G{Pinjaman anggota < kuota pinjaman?}
+    F -- Tidak --> X2[Tolak: kuota reservasi tercapai]
+    G -- Tidak --> X3[Tolak: kuota pinjaman tercapai]
+    F -- Ya --> H{Status unit = tersedia?}
+    G -- Ya --> H
+    H -- Tidak --> X4[Tolak: unit tidak tersedia]
+    H -- Ya --> I[Mulai DB transaction]
+    I --> J[Buat data loan]
+    J --> K[tanggal_jatuh_tempo = tanggal_pinjam + 5 hari]
+    K --> L[Ubah status unit menjadi dipinjam]
+    L --> M[Commit transaction]
+    M --> N[Tampilkan konfirmasi dan jatuh tempo]
+    N --> E1([Selesai])
     X1 --> E1
     X2 --> E1
     X3 --> E1
+    X4 --> E1
 ```
 
 ## 5. Pengembalian Robot dan Perhitungan Denda (Admin)

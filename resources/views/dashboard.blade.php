@@ -136,7 +136,8 @@
 
     @else
         {{-- ================= MEMBER DASHBOARD ================= --}}
-        <div x-data="memberDashboard()" x-init="init()" class="space-y-6">
+        @php($loanSettings = \App\Models\AppSetting::current())
+        <div x-data="memberDashboard({{ $loanSettings->borrowed_robot_limit }}, {{ $loanSettings->reservation_robot_limit }})" x-init="init()" class="space-y-6">
             {{-- Welcome greeting --}}
             <div class="bg-gradient-to-r from-primary-500 via-primary-600 to-accent-600 rounded-3xl p-6 sm:p-8 text-white shadow-lg relative overflow-hidden">
                 <div class="max-w-xl relative z-10">
@@ -156,7 +157,7 @@
 
             {{-- Stat Cards for Member --}}
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <x-stat-card title="Pinjaman Aktif" value="activeCount + ' / 2'" icon="clock" color="primary" subtitle="'Maksimal 2 unit pinjaman bersamaan'" />
+                <x-stat-card title="Kuota Robot" value="borrowedCount + '/' + borrowedLimit + ' · ' + reservationCount + '/' + reservationLimit" icon="clock" color="primary" subtitle="'Dipinjam · reservasi'" />
                 <x-stat-card title="Jatuh Tempo Terdekat" value="nearestDueText" icon="alert" color="warning" subtitle="'Durasi pinjam standar 5 hari'" />
                 <x-stat-card title="Total Denda" value="formatRupiah(totalFine)" icon="money" color="danger" subtitle="fineSubtitle" />
             </div>
@@ -363,12 +364,15 @@
         </div>
 
         <script>
-            function memberDashboard() {
+            function memberDashboard(borrowedLimit, reservationLimit) {
                 return {
                     tab: 'active',
                     activeLoans: [],
                     historyLoans: [],
-                    activeCount: 0,
+                    borrowedCount: 0,
+                    reservationCount: 0,
+                    borrowedLimit: borrowedLimit,
+                    reservationLimit: reservationLimit,
                     nearestDueText: '-',
                     totalFine: 0,
                     activeFine: 0,
@@ -396,7 +400,8 @@
                             // Filter active (status = 'dipinjam') & history (status = 'dikembalikan')
                             this.activeLoans = allLoans.filter(item => item.status === 'dipinjam');
                             this.historyLoans = allLoans.filter(item => item.status === 'dikembalikan');
-                            this.activeCount = this.activeLoans.length;
+                            this.borrowedCount = this.activeLoans.filter(loan => !this.isScheduled(loan)).length;
+                            this.reservationCount = this.activeLoans.filter(loan => this.isScheduled(loan)).length;
 
                             let sumActiveFine = 0;
                             let sumHistoryFine = 0;

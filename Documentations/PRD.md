@@ -75,7 +75,7 @@ Aplikasi web untuk mengelola peminjaman Robot Pacar. Anggota dapat mendaftar, me
 | ID | Kebutuhan | Prioritas |
 |---|---|---|
 | FR-12 | Anggota dapat meminjam unit berstatus `tersedia` | Tinggi |
-| FR-13 | Sistem menolak jika anggota sudah memiliki 2 pinjaman aktif | Tinggi |
+| FR-13 | Sistem menghitung dan menegakkan kuota pinjaman saat ini dan reservasi masa mendatang secara terpisah | Tinggi |
 | FR-14 | Sistem menetapkan `tanggal_jatuh_tempo` = tanggal pinjam + 5 hari | Tinggi |
 | FR-15 | Status unit berubah menjadi `dipinjam` setelah dipinjam | Tinggi |
 | FR-16 | Anggota melihat daftar pinjaman miliknya (aktif dan selesai) beserta jatuh tempo dan denda | Tinggi |
@@ -108,6 +108,7 @@ Aplikasi web untuk mengelola peminjaman Robot Pacar. Anggota dapat mendaftar, me
 | FR-28 | Admin melihat riwayat seluruh peminjaman | Tinggi |
 | FR-29 | Filter riwayat berdasarkan anggota dan rentang tanggal | Sedang |
 | FR-30 | Cetak riwayat (tampilan print-friendly atau PDF) | Tinggi |
+| FR-31 | Admin dapat mengubah kuota robot yang sedang dipinjam dan kuota reservasi; nilai awal masing-masing 1 | Tinggi |
 
 ## 5. User Stories dan Acceptance Criteria
 
@@ -123,8 +124,9 @@ Sebagai anggota, saya ingin mencari robot lewat nama atau kategori.
 
 **US-03 — Meminjam robot**
 Sebagai anggota, saya ingin meminjam unit robot.
-- Given pinjaman aktif < 2 dan unit tersedia, Then pinjaman tercatat dengan jatuh tempo +5 hari.
-- Given sudah 2 pinjaman aktif, Then ditolak dengan pesan "Batas maksimal 2 unit tercapai".
+- Given kuota pinjaman atau reservasi yang sesuai masih tersedia dan unit tersedia, Then pinjaman tercatat dengan jatuh tempo +5 hari.
+- Given kuota untuk jenis permintaan telah tercapai, Then permintaan baru ditolak.
+- Given admin mengubah kuota, Then nilai baru berlaku untuk permintaan berikutnya tanpa membatalkan transaksi yang sudah ada.
 - Given unit sudah dipinjam, Then ditolak.
 
 **US-04 — Mengembalikan robot**
@@ -179,7 +181,7 @@ Sebagai admin, saya ingin mencetak riwayat peminjaman anggota.
 | Field | Aturan |
 |---|---|
 | robot_unit_id | required, exists:robot_units,id; status unit = `tersedia` |
-| (aturan bisnis) | pinjaman aktif user < 2 |
+| (aturan bisnis) | jumlah pinjaman saat ini dan reservasi masa mendatang masing-masing di bawah kuota admin |
 
 ### Pengembalian
 | Field | Aturan |

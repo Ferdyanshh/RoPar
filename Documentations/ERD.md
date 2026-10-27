@@ -81,6 +81,14 @@ erDiagram
         timestamp created_at
         timestamp updated_at
     }
+
+    APP_SETTINGS {
+        bigint id PK
+        int borrowed_robot_limit "default 1"
+        int reservation_robot_limit "default 1"
+        timestamp created_at
+        timestamp updated_at
+    }
 ```
 
 ## 2. Kamus Data
@@ -175,7 +183,7 @@ erDiagram
 |---|---|
 | Kode unit tidak boleh sama | UNIQUE index `robot_units.kode_unit` |
 | Satu user satu profil | UNIQUE index `profiles.user_id` |
-| Maksimal 2 pinjaman aktif per anggota | Validasi aplikasi: `COUNT(loans WHERE user_id = ? AND status = 'dipinjam') < 2` |
+| Kuota pinjaman dan reservasi per anggota | Validasi aplikasi membandingkan jumlah masing-masing dengan `app_settings.borrowed_robot_limit` atau `app_settings.reservation_robot_limit`; nilai awal keduanya 1 |
 | Unit tidak dapat dipinjam ganda | Cek `robot_units.status = 'tersedia'` di dalam DB transaction (dengan `lockForUpdate`) |
 | Data yang dipakai tidak boleh dihapus | Foreign key `RESTRICT` pada `loans`, `robot_units`, dan `category_robot.category_id` |
 | Hanya anggota yang dapat meminjam | Validasi `users.role = 'anggota'` |

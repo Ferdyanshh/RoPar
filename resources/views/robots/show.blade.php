@@ -4,15 +4,23 @@
     $robot = \App\Models\Robot::with(['categories:id,name', 'units'])->find($robotId);
 
     $user = auth()->user();
-    $activeLoansCount = 0;
+    $borrowedLoansCount = 0;
+    $reservationCount = 0;
     if ($user && $user->role === \App\Enums\UserRole::Member) {
-        $activeLoansCount = \App\Models\Loan::where('user_id', $user->id)
+        $memberLoans = \App\Models\Loan::where('user_id', $user->id)
             ->where('status', \App\Enums\LoanStatus::Borrowed->value)
-            ->count();
+            ->whereNull('return_date');
+        $today = \Carbon\CarbonImmutable::today(config('app.timezone'))->toDateString();
+        $borrowedLoansCount = (clone $memberLoans)->whereDate('loan_date', '<=', $today)->count();
+        $reservationCount = (clone $memberLoans)->whereDate('loan_date', '>', $today)->count();
     }
+    $loanSettings = \App\Models\AppSetting::current();
+    $borrowedLoanLimit = $loanSettings->borrowed_robot_limit;
+    $reservationLimit = $loanSettings->reservation_robot_limit;
+    $bothLoanQuotasFull = $borrowedLoansCount >= $borrowedLoanLimit && $reservationCount >= $reservationLimit;
 @endphp
 
-    <div x-data="robotDetail(@js($robot), {{ $activeLoansCount }})" class="space-y-6">
+    <div x-data="robotDetail(@js($robot), {{ $borrowedLoansCount }}, {{ $reservationCount }}, {{ $borrowedLoanLimit }}, {{ $reservationLimit }})" class="space-y-6">
         {{-- Back Button --}}
         <div>
             <a href="/robots" class="inline-flex items-center gap-2 text-sm font-semibold text-surface-500 hover:text-primary-600 transition">
@@ -74,24 +82,17 @@
 
                         {{-- Member Active Loans Indicator --}}
                         @if($user && $user->role === \App\Enums\UserRole::Member)
-                            <div class="mt-6 p-4 rounded-2xl border transition-colors {{ $activeLoansCount >= 2 ? 'bg-danger-50/60 border-danger-200' : 'bg-primary-50/40 border-primary-200/60' }}">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-12 h-12 rounded-xl flex items-center justify-center font-bold text-base flex-shrink-0 {{ $activeLoansCount >= 2 ? 'bg-danger-100 text-danger-700' : 'bg-primary-100 text-primary-700' }}">
-                                        {{ $activeLoansCount }}/2
-                                    </div>
-                                    <div>
-                                        <p class="text-xs font-bold text-surface-800">Status Kuota Peminjaman Anda</p>
-                                        @if($activeLoansCount >= 2)
-                                            <p class="text-xs text-danger-600 font-medium mt-0.5">
-                                                Batas maksimal 2 unit pinjaman aktif telah tercapai. Kembalikan salah satu unit sebelum meminjam lagi.
-                                            </p>
-                                        @else
-                                            <p class="text-xs text-success-600 font-medium mt-0.5">
-                                                Anda masih bisa meminjam <span class="font-bold">{{ 2 - $activeLoansCount }}</span> unit lagi (maksimal 5 hari per pinjaman).
-                                            </p>
-                                        @endif
-                                    </div>
+                            <div class="mt-6 p-4 rounded-2xl border {{ $bothLoanQuotasFull ? 'bg-danger-50/60 border-danger-200' : 'bg-primary-50/40 border-primary-200/60' }}">
+                                <p class="text-xs font-bold text-surface-800 mb-2">Kuota Peminjaman Anda</p>
+                                <div class="flex flex-wrap gap-2 text-xs font-semibold">
+                                    <span class="px-2.5 py-1 rounded-lg {{ $borrowedLoansCount >= $borrowedLoanLimit ? 'bg-danger-100 text-danger-700' : 'bg-primary-100 text-primary-700' }}">
+                                        Dipinjam: {{ $borrowedLoansCount }}/{{ $borrowedLoanLimit }}
+                                    </span>
+                                    <span class="px-2.5 py-1 rounded-lg {{ $reservationCount >= $reservationLimit ? 'bg-danger-100 text-danger-700' : 'bg-primary-100 text-primary-700' }}">
+                                        Reservasi: {{ $reservationCount }}/{{ $reservationLimit }}
+                                    </span>
                                 </div>
+                                <p class="text-xs text-surface-600 mt-2">Kuota pinjaman dan reservasi dihitung terpisah. Maksimal 5 hari per pinjaman.</p>
                             </div>
                         @endif
                     </div>
@@ -137,11 +138,11 @@
                                                         class="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-bold bg-surface-100 text-surface-400 cursor-not-allowed">
                                                     <span>Unit Sedang {{ ucfirst($unit->status->value) }}</span>
                                                 </button>
-                                            @elseif($activeLoansCount >= 2)
+                                            @elseif($bothLoanQuotasFull)
                                                 <button type="button" disabled
-                                                        title="Batas maksimal 2 unit pinjaman aktif telah tercapai"
+                                                        title="Kuota pinjaman dan reservasi telah tercapai"
                                                         class="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-bold bg-surface-200 text-surface-400 cursor-not-allowed">
-                                                    <span>Batas Maksimal 2 Unit Tercapai</span>
+                                                    <span>Semua Kuota Tercapai</span>
                                                 </button>
                                             @else
                                                 <button type="button" @click="openBorrowModal(@js($unit))"
@@ -206,6 +207,10 @@
                                 <input type="date" x-model="borrowStartDate" :min="todayDate()" @change="recalculateDuration"
                                        class="w-full px-3 py-2 bg-white border border-surface-300 rounded-xl text-xs font-medium focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none">
                                 <span class="text-[10px] text-surface-400 mt-0.5 block">Unit direservasi mulai tanggal ini</span>
+                                <p x-show="borrowStartDate <= todayDate() && borrowedLoansCount >= borrowedLoanLimit && reservationCount < reservationLimit"
+                                   class="text-[10px] text-warning-700 mt-1">Kuota pinjaman penuh. Pilih tanggal mendatang untuk menggunakan kuota reservasi.</p>
+                                <p x-show="borrowStartDate > todayDate() && reservationCount >= reservationLimit"
+                                   class="text-[10px] text-danger-600 mt-1">Kuota reservasi Anda telah tercapai.</p>
                             </div>
 
                             {{-- Tanggal Rencana Pengembalian --}}
@@ -309,9 +314,9 @@
                     <div class="flex items-center justify-between px-3 py-2 bg-surface-100 rounded-xl text-[11px] text-surface-600 mb-5">
                         <span class="flex items-center gap-1">
                             <svg class="w-3.5 h-3.5 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                            Maksimal 2 unit pinjaman aktif per anggota
+                            Kuota pinjaman dan reservasi dihitung terpisah
                         </span>
-                        <span class="font-bold text-surface-800">Pinjaman saat ini: {{ $activeLoansCount }}/2</span>
+                        <span class="font-bold text-surface-800">Dipinjam {{ $borrowedLoansCount }}/{{ $borrowedLoanLimit }} · Reservasi {{ $reservationCount }}/{{ $reservationLimit }}</span>
                     </div>
 
                     {{-- Actions --}}
@@ -332,10 +337,13 @@
     </div>
 
     <script>
-        function robotDetail(initialRobot, activeLoansCount) {
+        function robotDetail(initialRobot, borrowedLoansCount, reservationCount, borrowedLoanLimit, reservationLimit) {
             return {
                 robot: initialRobot,
-                activeLoansCount: activeLoansCount,
+                borrowedLoansCount: borrowedLoansCount,
+                reservationCount: reservationCount,
+                borrowedLoanLimit: borrowedLoanLimit,
+                reservationLimit: reservationLimit,
                 showModal: false,
                 selectedUnit: null,
                 borrowing: false,
@@ -345,9 +353,9 @@
                 borrowDurationDays: 5,
 
                 openBorrowModal(unit) {
-                    if (this.activeLoansCount >= 2) {
+                    if (this.borrowedLoansCount >= this.borrowedLoanLimit && this.reservationCount >= this.reservationLimit) {
                         window.dispatchEvent(new CustomEvent('toast', {
-                            detail: { message: 'Anggota hanya dapat memiliki maksimal 2 unit pinjaman aktif.', type: 'error' }
+                            detail: { message: 'Kuota pinjaman dan reservasi Anda telah tercapai.', type: 'error' }
                         }));
                         return;
                     }

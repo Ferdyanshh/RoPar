@@ -90,6 +90,10 @@
                     <span class="flex-1">Verifikasi Denda</span>
                     <span x-data="finePaymentNotice()" x-init="init()" x-show="count > 0" x-text="count" class="rounded-full bg-danger-600 px-2 py-0.5 text-[10px] font-bold text-white"></span>
                 </a>
+                <div class="pt-4 pb-1 px-3">
+                    <p class="text-xs font-semibold text-surface-400 uppercase tracking-wider">Sistem</p>
+                </div>
+                <x-sidebar-link href="/admin/settings/loans" icon="settings" :active="request()->is('admin/settings/*')">Pengaturan</x-sidebar-link>
             @else
                 {{-- Member nav --}}
                 <x-sidebar-link href="/dashboard" icon="home" :active="request()->is('dashboard')">Dashboard</x-sidebar-link>

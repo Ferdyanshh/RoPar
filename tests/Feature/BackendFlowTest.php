@@ -130,7 +130,7 @@ class BackendFlowTest extends TestCase
         Http::assertSentCount(1);
     }
 
-    public function test_member_can_borrow_available_unit_and_is_limited_to_two_active_loans(): void
+    public function test_member_default_quota_allows_one_borrowed_robot_and_one_reservation(): void
     {
         $member = User::factory()->create();
         $firstUnit = RobotUnit::factory()->create();
@@ -152,14 +152,95 @@ class BackendFlowTest extends TestCase
         $this->postJson('/backend/loans', [
             'robot_unit_id' => $secondUnit->id,
             'loan_date' => $loanDate,
-        ])->assertCreated();
+        ])->assertUnprocessable();
 
         $thirdUnit = RobotUnit::factory()->create();
         $this->postJson('/backend/loans', [
             'robot_unit_id' => $thirdUnit->id,
-            'loan_date' => $loanDate,
+            'loan_date' => CarbonImmutable::today(config('app.timezone'))->addDay()->toDateString(),
+        ])->assertCreated();
+
+        $fourthUnit = RobotUnit::factory()->create();
+        $this->postJson('/backend/loans', [
+            'robot_unit_id' => $fourthUnit->id,
+            'loan_date' => CarbonImmutable::today(config('app.timezone'))->addDays(2)->toDateString(),
         ])->assertUnprocessable();
-        $this->assertDatabaseMissing('loans', ['robot_unit_id' => $thirdUnit->id]);
+
+        $this->assertDatabaseMissing('loans', ['robot_unit_id' => $fourthUnit->id]);
+    }
+
+    public function test_admin_can_update_borrowing_and_reservation_limits(): void
+    {
+        $admin = User::factory()->create(['role' => UserRole::Admin]);
+
+        $this->actingAs($admin)
+            ->getJson('/backend/admin/loan-settings')
+            ->assertOk()
+            ->assertJsonPath('data.borrowed_robot_limit', 1)
+            ->assertJsonPath('data.reservation_robot_limit', 1);
+
+        $this->patchJson('/backend/admin/loan-settings', [
+            'borrowed_robot_limit' => 3,
+            'reservation_robot_limit' => 2,
+        ])->assertOk()
+            ->assertJsonPath('data.borrowed_robot_limit', 3)
+            ->assertJsonPath('data.reservation_robot_limit', 2);
+
+        $member = User::factory()->create();
+        $today = CarbonImmutable::today(config('app.timezone'))->toDateString();
+        $this->actingAs($member);
+
+        foreach (range(1, 3) as $index) {
+            $this->postJson('/backend/loans', [
+                'robot_unit_id' => RobotUnit::factory()->create()->id,
+                'loan_date' => $today,
+            ])->assertCreated();
+        }
+
+        $this->postJson('/backend/loans', [
+            'robot_unit_id' => RobotUnit::factory()->create()->id,
+            'loan_date' => $today,
+        ])->assertUnprocessable();
+
+        foreach (range(1, 2) as $index) {
+            $this->postJson('/backend/loans', [
+                'robot_unit_id' => RobotUnit::factory()->create()->id,
+                'loan_date' => CarbonImmutable::today(config('app.timezone'))->addDays($index)->toDateString(),
+            ])->assertCreated();
+        }
+
+        $this->postJson('/backend/loans', [
+            'robot_unit_id' => RobotUnit::factory()->create()->id,
+            'loan_date' => CarbonImmutable::today(config('app.timezone'))->addDays(3)->toDateString(),
+        ])->assertUnprocessable();
+
+        $this->actingAs($admin)
+            ->get('/admin/settings/loans')
+            ->assertOk()
+            ->assertSee('Kebijakan Peminjaman');
+
+        $this->patchJson('/backend/admin/loan-settings', [
+            'borrowed_robot_limit' => -1,
+            'reservation_robot_limit' => 'invalid',
+        ])->assertUnprocessable()
+            ->assertJsonValidationErrors(['borrowed_robot_limit', 'reservation_robot_limit']);
+    }
+
+    public function test_member_pages_display_separate_borrowing_and_reservation_quotas(): void
+    {
+        $member = User::factory()->create();
+        $robot = Robot::factory()->create();
+        RobotUnit::factory()->create(['robot_id' => $robot->id]);
+
+        $this->actingAs($member)
+            ->get('/robots/'.$robot->id)
+            ->assertOk()
+            ->assertSee('Dipinjam: 0/1')
+            ->assertSee('Reservasi: 0/1');
+
+        $this->get('/dashboard')
+            ->assertOk()
+            ->assertSee('Kuota Robot');
     }
 
     public function test_member_cannot_borrow_a_unit_that_is_already_borrowed(): void

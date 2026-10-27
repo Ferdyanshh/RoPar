@@ -19,7 +19,7 @@ RoPar (Robot Pacar) adalah aplikasi web untuk mengelola layanan peminjaman robot
 
 1. Menyediakan platform web bagi anggota untuk mencari dan meminjam robot secara mandiri.
 2. Memberi admin kontrol penuh atas data robot, kategori, anggota, dan proses pengembalian.
-3. Menegakkan aturan peminjaman (maksimal 2 unit, maksimal 5 hari) secara otomatis.
+3. Menegakkan kuota pinjaman dan reservasi yang dapat diatur admin, serta durasi maksimal 5 hari.
 4. Menghitung denda keterlambatan otomatis dan akurat.
 5. Menyediakan riwayat peminjaman yang dapat dicetak sebagai laporan.
 
@@ -66,7 +66,7 @@ RoPar (Robot Pacar) adalah aplikasi web untuk mengelola layanan peminjaman robot
 | BR-05 | Satu robot dapat memiliki lebih dari satu kategori. |
 | BR-06 | Satu nama robot dapat memiliki banyak unit, dibedakan oleh kode unit. |
 | BR-07 | Kode unit harus unik di seluruh sistem. |
-| BR-08 | Seorang anggota maksimal meminjam **2 unit** secara bersamaan. |
+| BR-08 | Anggota memiliki kuota terpisah untuk robot yang sedang dipinjam dan reservasi; nilai awal masing-masing **1 unit** dan admin dapat mengubahnya. |
 | BR-09 | Durasi pinjaman maksimal **5 hari**. |
 | BR-10 | Keterlambatan dikenai denda **Rp5.000 per hari** keterlambatan. |
 | BR-11 | Pengembalian hanya dapat diproses oleh admin; anggota menghubungi admin untuk mengembalikan unit. |
@@ -99,6 +99,7 @@ Contoh: dipinjam 1 Nov, jatuh tempo 6 Nov, dikembalikan 9 Nov → terlambat 3 ha
 | BRQ-07 | Admin dapat memproses pengembalian dengan denda otomatis | Tinggi |
 | BRQ-08 | Admin dapat melihat daftar unit yang sedang dipinjam | Tinggi |
 | BRQ-09 | Admin dapat melihat dan mencetak riwayat peminjaman | Sedang |
+| BRQ-10 | Admin dapat mengatur kuota pinjaman dan reservasi secara terpisah | Tinggi |
 
 ## 8. Alur Proses Bisnis
 
@@ -108,12 +109,16 @@ Contoh: dipinjam 1 Nov, jatuh tempo 6 Nov, dikembalikan 9 Nov → terlambat 3 ha
 flowchart TD
     A[Anggota login] --> B[Cari robot berdasarkan nama/kategori]
     B --> C[Pilih unit tersedia]
-    C --> D{Pinjaman aktif < 2?}
-    D -- Tidak --> E[Tolak: batas 2 unit tercapai]
-    D -- Ya --> F{Unit tersedia?}
-    F -- Tidak --> G[Tolak: unit sedang dipinjam]
-    F -- Ya --> H[Catat pinjaman, jatuh tempo = +5 hari]
-    H --> I[Status unit = dipinjam]
+    C --> D{Tanggal mulai mendatang?}
+    D -- Ya --> E{Reservasi anggota < kuota reservasi?}
+    D -- Tidak --> F{Pinjaman anggota < kuota pinjaman?}
+    E -- Tidak --> G[Tolak: kuota reservasi tercapai]
+    F -- Tidak --> H[Tolak: kuota pinjaman tercapai]
+    E -- Ya --> I{Unit tersedia?}
+    F -- Ya --> I
+    I -- Tidak --> J[Tolak: unit sedang dipinjam]
+    I -- Ya --> K[Catat pinjaman, jatuh tempo = +5 hari]
+    K --> L[Status unit = dipinjam]
 ```
 
 ### 8.2 Pengembalian

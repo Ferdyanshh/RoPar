@@ -10,13 +10,14 @@ RoPar (Sistem Peminjaman Robot Pacar) adalah aplikasi web untuk mengelola katalo
 |---|---|
 | Guest | Registrasi dan login |
 | Anggota | Melihat katalog, mencari robot, mengajukan pinjaman, melihat pinjaman dan profil sendiri |
-| Admin | Mengelola kategori, robot, unit, anggota, pengembalian, riwayat, dan laporan |
+| Admin | Mengelola kategori, robot, unit, anggota, kebijakan peminjaman, pengembalian, riwayat, dan laporan |
 
 Pengembalian hanya dapat diproses admin. Anggota menghubungi admin untuk mengembalikan unit.
 
 ## 3. Aturan Bisnis
 
-- Maksimal **dua pinjaman aktif** untuk setiap anggota.
+- Default kuota setiap anggota adalah **satu robot yang sedang dipinjam** dan **satu reservasi**. Admin dapat mengubah kedua kuota secara terpisah.
+- Pinjaman dengan tanggal mulai hari ini atau sebelumnya menggunakan kuota robot yang sedang dipinjam. Pinjaman dengan tanggal mulai mendatang menggunakan kuota reservasi.
 - Lama pinjaman adalah **lima hari** sejak tanggal pinjam.
 - Denda keterlambatan adalah **Rp5.000 per hari**.
 - Tanggal pengembalian dan denda final dihitung oleh server ketika admin memproses pengembalian.
@@ -116,10 +117,10 @@ Jika robot tidak memiliki foto, aplikasi menampilkan ilustrasi placeholder.
 
 1. Dari detail robot, pilih unit berstatus tersedia.
 2. Tekan tombol pinjam dan konfirmasi.
-3. Jika anggota belum mencapai dua pinjaman aktif, transaksi tersimpan dan tanggal jatuh tempo ditetapkan lima hari setelah tanggal pinjam.
+3. Transaksi hanya tersimpan jika kuota untuk jenis permintaan tersebut masih tersedia. Tanggal mulai mendatang dihitung sebagai reservasi.
 4. Buka **Pinjaman Saya** untuk melihat pinjaman aktif dan riwayat.
 
-Jika sudah memiliki dua pinjaman aktif, permintaan berikutnya ditolak. Anggota tidak memproses pengembalian dari halaman ini; hubungi admin.
+Kuota pinjaman dan reservasi diperiksa terpisah dan ditampilkan pada detail robot. Anggota tidak memproses pengembalian dari halaman ini; hubungi admin.
 
 ### 5.5 Mengubah profil
 
@@ -134,7 +135,14 @@ Jika sudah memiliki dua pinjaman aktif, permintaan berikutnya ditolak. Anggota t
 
 Setelah login sebagai admin, dashboard menyediakan ringkasan. Gunakan menu samping untuk membuka data kategori, robot, unit, anggota, pinjaman aktif, dan riwayat.
 
-### 6.2 Mengelola data master
+### 6.2 Mengatur kuota peminjaman
+
+1. Buka **Pengaturan** (`/admin/settings/loans`).
+2. Atur jumlah maksimum robot yang sedang dipinjam dan jumlah maksimum reservasi per anggota secara terpisah.
+3. Nilai awal untuk masing-masing kuota adalah **1**. Nilai `0` menonaktifkan jenis peminjaman tersebut.
+4. Tekan **Simpan Pengaturan**. Perubahan berlaku untuk permintaan baru dan tidak membatalkan pinjaman atau reservasi yang sudah ada.
+
+### 6.3 Mengelola data master
 
 Di halaman masing-masing, admin dapat menambah, melihat, mengubah, dan menghapus data:
 
@@ -145,7 +153,7 @@ Di halaman masing-masing, admin dapat menambah, melihat, mengubah, dan menghapus
 
 Ikuti validasi pada form. Kode unit harus unik. Kategori yang masih digunakan robot tidak dapat dihapus. Data yang masih terikat transaksi dapat ditolak saat dihapus.
 
-### 6.3 Memproses pengembalian
+### 6.4 Memproses pengembalian
 
 1. Buka **Pinjaman Aktif** (`/admin/loans/active`).
 2. Temukan anggota dan unit yang dikembalikan; periksa tanggal pinjam dan jatuh tempo.
@@ -155,7 +163,7 @@ Ikuti validasi pada form. Kode unit harus unik. Kategori yang masih digunakan ro
 
 Rumus denda: `maks(0, tanggal kembali − tanggal jatuh tempo) × Rp5.000`. Contoh: keterlambatan tiga hari menghasilkan Rp15.000. Tanggal dari browser tidak menjadi sumber tanggal final.
 
-### 6.4 Melihat, memfilter, dan mencetak riwayat
+### 6.5 Melihat, memfilter, dan mencetak riwayat
 
 1. Buka **Riwayat Peminjaman** (`/admin/loans/history`).
 2. Filter berdasarkan rentang tanggal pinjam, status, anggota, atau kata kunci.

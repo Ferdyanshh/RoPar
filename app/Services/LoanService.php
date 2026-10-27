@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Enums\LoanStatus;
 use App\Enums\RobotUnitStatus;
+use App\Models\AppSetting;
 use App\Models\Loan;
 use App\Models\RobotUnit;
 use App\Models\User;
@@ -13,8 +14,6 @@ use Illuminate\Validation\ValidationException;
 
 class LoanService
 {
-    private const int MAX_ACTIVE_LOANS = 2;
-
     private const int LOAN_DURATION_DAYS = 5;
 
     private const int FINE_PER_LATE_DAY = 5000;
@@ -23,14 +22,25 @@ class LoanService
     {
         return DB::transaction(function () use ($member, $robotUnitId, $loanDateInput): Loan {
             $lockedMember = User::query()->lockForUpdate()->findOrFail($member->id);
-            $activeLoanCount = Loan::query()
+            $settings = AppSetting::query()->lockForUpdate()->findOrFail(1);
+            $loanDate = CarbonImmutable::parse($loanDateInput, config('app.timezone'))->startOfDay();
+            $today = CarbonImmutable::today(config('app.timezone'));
+            $isReservation = $loanDate->gt($today);
+            $loanCountQuery = Loan::query()
                 ->where('user_id', $lockedMember->id)
                 ->where('status', LoanStatus::Borrowed->value)
-                ->count();
+                ->whereNull('return_date');
 
-            if ($activeLoanCount >= self::MAX_ACTIVE_LOANS) {
+            $loanCount = (clone $loanCountQuery)
+                ->whereDate('loan_date', $isReservation ? '>' : '<=', $today)
+                ->count();
+            $loanLimit = $isReservation ? $settings->reservation_robot_limit : $settings->borrowed_robot_limit;
+
+            if ($loanCount >= $loanLimit) {
                 throw ValidationException::withMessages([
-                    'robot_unit_id' => 'Anggota hanya dapat memiliki maksimal dua pinjaman aktif.',
+                    'robot_unit_id' => $isReservation
+                        ? "Anggota hanya dapat memiliki maksimal {$loanLimit} reservasi robot."
+                        : "Anggota hanya dapat memiliki maksimal {$loanLimit} robot yang sedang dipinjam.",
                 ]);
             }
 
@@ -41,9 +51,6 @@ class LoanService
                     'robot_unit_id' => 'Unit robot ini tidak tersedia untuk dipinjam.',
                 ]);
             }
-
-            $loanDate = CarbonImmutable::parse($loanDateInput, config('app.timezone'))->startOfDay();
-            $today = CarbonImmutable::today(config('app.timezone'));
 
             if ($loanDate->lt($today)) {
                 throw ValidationException::withMessages([

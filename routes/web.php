@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
 use App\Http\Controllers\Admin\FinePaymentController as AdminFinePaymentController;
 use App\Http\Controllers\Admin\LoanController as AdminLoanController;
 use App\Http\Controllers\Admin\LoanReportController;
+use App\Http\Controllers\Admin\LoanSettingsController;
 use App\Http\Controllers\Admin\MemberController;
 use App\Http\Controllers\Admin\RobotController as AdminRobotController;
 use App\Http\Controllers\Admin\RobotUnitController;
@@ -41,6 +42,9 @@ Route::prefix('backend')->name('backend.')->group(function (): void {
         });
 
         Route::prefix('admin')->name('admin.')->middleware('role:admin')->group(function (): void {
+            Route::get('/loan-settings', [LoanSettingsController::class, 'show'])->name('loan-settings.show');
+            Route::patch('/loan-settings', [LoanSettingsController::class, 'update'])->name('loan-settings.update');
+
             Route::get('/categories', [AdminCategoryController::class, 'index'])->name('categories.index');
             Route::post('/categories', [AdminCategoryController::class, 'store'])->name('categories.store');
             Route::get('/categories/{category}', [AdminCategoryController::class, 'show'])->name('categories.show');
@@ -106,5 +110,6 @@ Route::middleware('auth')->group(function (): void {
         Route::view('/loans/history', 'admin.loans-history')->name('loans.history');
         Route::get('/loans/history/print', [LoanReportController::class, 'print'])->name('loans.print');
         Route::view('/fine-payments', 'admin.fine-payments')->name('fine-payments');
+        Route::view('/settings/loans', 'admin.settings-loans')->name('settings.loans');
     });
 });
